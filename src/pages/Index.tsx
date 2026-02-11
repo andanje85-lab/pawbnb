@@ -15,6 +15,7 @@ import listing6 from "@/assets/listing-6.jpg";
 
 const listings = [
   {
+    id: "sunny-backyard-haven",
     image: listing1,
     title: "Sunny Backyard Haven",
     location: "Portland, OR",
@@ -25,6 +26,7 @@ const listings = [
     tags: ["Fenced Yard", "Small Dogs"],
   },
   {
+    id: "downtown-dog-friendly-loft",
     image: listing2,
     title: "Downtown Dog-Friendly Loft",
     location: "Austin, TX",
@@ -35,6 +37,7 @@ const listings = [
     tags: ["All Sizes", "Daycare"],
   },
   {
+    id: "country-farmhouse-retreat",
     image: listing3,
     title: "Country Farmhouse Retreat",
     location: "Asheville, NC",
@@ -45,6 +48,7 @@ const listings = [
     tags: ["Large Yard", "Multiple Dogs"],
   },
   {
+    id: "luxury-pool-villa",
     image: listing4,
     title: "Luxury Pool Villa",
     location: "Scottsdale, AZ",
@@ -55,6 +59,7 @@ const listings = [
     tags: ["Pool", "Premium"],
   },
   {
+    id: "coastal-beach-cottage",
     image: listing5,
     title: "Coastal Beach Cottage",
     location: "Malibu, CA",
@@ -65,6 +70,7 @@ const listings = [
     tags: ["Beach Access", "Medium Dogs"],
   },
   {
+    id: "english-garden-cottage",
     image: listing6,
     title: "English Garden Cottage",
     location: "Denver, CO",
