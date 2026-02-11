@@ -1,8 +1,10 @@
 import { Star, Heart, Shield, MapPin } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 interface ListingCardProps {
+  id: string;
   image: string;
   title: string;
   location: string;
@@ -13,10 +15,11 @@ interface ListingCardProps {
   tags: string[];
 }
 
-const ListingCard = ({ image, title, location, rating, reviews, price, verified, tags }: ListingCardProps) => {
+const ListingCard = ({ id, image, title, location, rating, reviews, price, verified, tags }: ListingCardProps) => {
   const [liked, setLiked] = useState(false);
 
   return (
+    <Link to={`/listing/${id}`} className="block">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -73,6 +76,7 @@ const ListingCard = ({ image, title, location, rating, reviews, price, verified,
         </p>
       </div>
     </motion.div>
+    </Link>
   );
 };
 
