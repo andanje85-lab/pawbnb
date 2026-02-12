@@ -32,7 +32,7 @@ const Header = () => {
             </Button>
             {user ? (
               <>
-                <Button variant="outline" size="sm">Become a Host</Button>
+                <Link to="/create-listing"><Button variant="outline" size="sm">Become a Host</Button></Link>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
                   Sign Out
@@ -40,7 +40,7 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm">Become a Host</Button>
+                <Link to="/create-listing"><Button variant="outline" size="sm">Become a Host</Button></Link>
                 <Link to="/auth">
                   <Button size="sm">
                     <User className="w-4 h-4 mr-1" />
