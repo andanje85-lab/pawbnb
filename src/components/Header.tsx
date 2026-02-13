@@ -32,6 +32,7 @@ const Header = () => {
             </Button>
             {user ? (
               <>
+                <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
                 <Link to="/create-listing"><Button variant="outline" size="sm">Become a Host</Button></Link>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
@@ -71,7 +72,12 @@ const Header = () => {
               <a href="#trust" className="block text-sm font-medium text-muted-foreground">Trust & Safety</a>
               <div className="flex gap-2 pt-2">
                 {user ? (
-                  <Button variant="outline" size="sm" className="flex-1" onClick={signOut}>Sign Out</Button>
+                  <>
+                    <Link to="/dashboard" className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
+                    </Link>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={signOut}>Sign Out</Button>
+                  </>
                 ) : (
                   <Link to="/auth" className="flex-1">
                     <Button size="sm" className="w-full">Sign In</Button>
