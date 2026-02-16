@@ -33,6 +33,7 @@ const Header = () => {
             {user ? (
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
+                <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
                 <Link to="/create-listing"><Button variant="outline" size="sm">Become a Host</Button></Link>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
