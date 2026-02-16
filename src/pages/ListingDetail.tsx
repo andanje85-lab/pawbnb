@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare } from "lucide-react";
+import ReviewsList from "@/components/ReviewsList";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,22 @@ const ListingDetail = () => {
     enabled: isUuid,
   });
 
+  // Fetch reviews for DB listings
+  const { data: reviewStats } = useQuery({
+    queryKey: ["reviews-stats", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("listing_id", id!);
+      if (error) throw error;
+      if (!data || data.length === 0) return { avg: 0, count: 0 };
+      const avg = data.reduce((s, r) => s + r.rating, 0) / data.length;
+      return { avg: parseFloat(avg.toFixed(1)), count: data.length };
+    },
+    enabled: isUuid,
+  });
+
   // Resolve listing data: DB or mock
   const mock = !isUuid && id ? mockListings[id] : null;
 
@@ -122,8 +139,8 @@ const ListingDetail = () => {
         images: photos.length > 0 ? photos : [listing1],
         title: dbListing.title,
         location: dbListing.city || "Unknown",
-        rating: 0,
-        reviews: 0,
+        rating: reviewStats?.avg || 0,
+        reviews: reviewStats?.count || 0,
         price: dbListing.price_per_night,
         verified: true,
         hostName: (dbListing as any)._hostName || "Host",
@@ -137,7 +154,7 @@ const ListingDetail = () => {
       return { ...mock, id: id!, isDb: false };
     }
     return null;
-  }, [isUuid, dbListing, mock, id]);
+  }, [isUuid, dbListing, mock, id, reviewStats]);
 
   const nights = useMemo(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -327,6 +344,9 @@ const ListingDetail = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Reviews */}
+              {isUuid && id && <ReviewsList listingId={id} />}
             </div>
 
             {/* Right: Booking Card */}
