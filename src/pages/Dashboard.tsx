@@ -1,16 +1,18 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ReviewForm from "@/components/ReviewForm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
 
@@ -24,6 +26,7 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
 
   // Fetch profile to check host status
   const { data: profile } = useQuery({
@@ -40,7 +43,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  // Fetch guest bookings
+  // Fetch guest bookings with existing reviews
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ["my-bookings", user?.id],
     queryFn: async () => {
@@ -50,7 +53,14 @@ const Dashboard = () => {
         .eq("guest_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      // Fetch reviews for these bookings
+      const bookingIds = (data || []).map((b) => b.id);
+      const { data: reviews } = await supabase
+        .from("reviews")
+        .select("booking_id")
+        .in("booking_id", bookingIds.length > 0 ? bookingIds : ["__none__"]);
+      const reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
+      return (data || []).map((b) => ({ ...b, hasReview: reviewedSet.has(b.id) }));
     },
     enabled: !!user,
   });
@@ -185,35 +195,61 @@ const Dashboard = () => {
                           key={booking.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="flex gap-4 p-4 rounded-xl border border-border bg-card"
+                          className="p-4 rounded-xl border border-border bg-card"
                         >
-                          <img
-                            src={getListingPhoto(listing)}
-                            alt={listing?.title}
-                            className="w-24 h-24 rounded-lg object-cover shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-serif font-bold text-foreground truncate">{listing?.title}</h3>
-                              <Badge variant="outline" className={statusColors[booking.status] || ""}>
-                                {booking.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                              <MapPin className="w-3.5 h-3.5" /> {listing?.city || "Unknown"}
-                            </p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <CalendarDays className="w-3.5 h-3.5" />
-                                {format(new Date(booking.check_in), "MMM d")} – {format(new Date(booking.check_out), "MMM d, yyyy")}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Dog className="w-3.5 h-3.5" />
-                                {booking.number_of_dogs} dog{booking.number_of_dogs > 1 ? "s" : ""}
-                              </span>
-                              <span className="font-medium text-foreground">${booking.total_price}</span>
+                          <div className="flex gap-4">
+                            <img
+                              src={getListingPhoto(listing)}
+                              alt={listing?.title}
+                              className="w-24 h-24 rounded-lg object-cover shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-serif font-bold text-foreground truncate">{listing?.title}</h3>
+                                <Badge variant="outline" className={statusColors[booking.status] || ""}>
+                                  {booking.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                <MapPin className="w-3.5 h-3.5" /> {listing?.city || "Unknown"}
+                              </p>
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <CalendarDays className="w-3.5 h-3.5" />
+                                  {format(new Date(booking.check_in), "MMM d")} – {format(new Date(booking.check_out), "MMM d, yyyy")}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Dog className="w-3.5 h-3.5" />
+                                  {booking.number_of_dogs} dog{booking.number_of_dogs > 1 ? "s" : ""}
+                                </span>
+                                <span className="font-medium text-foreground">${booking.total_price}</span>
+                              </div>
+                              {booking.status === "confirmed" && !booking.hasReview && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-2"
+                                  onClick={() => setReviewingBookingId(reviewingBookingId === booking.id ? null : booking.id)}
+                                >
+                                  <Star className="w-3.5 h-3.5 mr-1" />
+                                  Leave a Review
+                                </Button>
+                              )}
+                              {booking.hasReview && (
+                                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
+                                </p>
+                              )}
                             </div>
                           </div>
+                          {reviewingBookingId === booking.id && (
+                            <ReviewForm
+                              bookingId={booking.id}
+                              listingId={booking.listing_id}
+                              reviewerId={user!.id}
+                              onClose={() => setReviewingBookingId(null)}
+                            />
+                          )}
                         </motion.div>
                       );
                     })}
