@@ -1,13 +1,20 @@
-import { useState } from "react";
-import { Dog, Menu, X, Heart, User, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const [staffRole, setStaffRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setStaffRole(null); return; }
+    (supabase as any).rpc("get_my_role").then(({ data }: { data: string | null }) => setStaffRole(data));
+  }, [user]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -34,6 +41,14 @@ const Header = () => {
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
+                {staffRole && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <ShieldCheck className="w-4 h-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/create-listing"><Button variant="outline" size="sm">Become a Host</Button></Link>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-1" />
