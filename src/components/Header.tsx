@@ -13,7 +13,14 @@ const Header = () => {
 
   useEffect(() => {
     if (!user) { setStaffRole(null); return; }
-    (supabase as any).rpc("get_my_role").then(({ data }: { data: string | null }) => setStaffRole(data));
+    (supabase as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: { data: { role: string } | null }) => {
+        setStaffRole(data?.role ?? null);
+      });
   }, [user]);
 
   return (
