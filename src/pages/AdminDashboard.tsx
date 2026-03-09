@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [removeRoleTarget, setRemoveRoleTarget] = useState<{ userId: string; name: string; role: string } | null>(null);
 
   const handleInviteStaff = async () => {
     if (!inviteEmail.trim()) return;
@@ -369,7 +371,12 @@ const AdminDashboard = () => {
                                 </SelectContent>
                               </Select>
                             ) : (
-                              <Button variant="ghost" size="icon" onClick={() => removeRole(u.user_id)} title="Remove role">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setRemoveRoleTarget({ userId: u.user_id, name: u.full_name || "this user", role: u.staffRole })}
+                                title="Remove role"
+                              >
                                 <X className="w-4 h-4 text-destructive" />
                               </Button>
                             )}
@@ -423,6 +430,31 @@ const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Remove Role Confirmation */}
+      <AlertDialog open={!!removeRoleTarget} onOpenChange={(open) => !open && setRemoveRoleTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove staff role?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the <span className="font-semibold capitalize">{removeRoleTarget?.role}</span> role from{" "}
+              <span className="font-semibold">{removeRoleTarget?.name}</span>. They will lose all staff permissions immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeRoleTarget) removeRole(removeRoleTarget.userId);
+                setRemoveRoleTarget(null);
+              }}
+            >
+              Remove Role
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
