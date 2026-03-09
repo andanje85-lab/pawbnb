@@ -36,6 +36,7 @@ const AdminDashboard = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [removeRoleTarget, setRemoveRoleTarget] = useState<{ userId: string; name: string; role: string } | null>(null);
 
   const handleInviteStaff = async () => {
     if (!inviteEmail.trim()) return;
