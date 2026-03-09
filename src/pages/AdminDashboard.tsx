@@ -32,6 +32,29 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  const handleInviteStaff = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-staff", {
+        body: { email: inviteEmail.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message || "Staff member invited!");
+      setInviteEmail("");
+      setInviteOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to invite staff member");
+    } finally {
+      setInviting(false);
+    }
+  };
 
   // Fetch current user role via direct query (user_roles not in generated types yet)
   const { data: myRole, isLoading: roleLoading } = useQuery({
