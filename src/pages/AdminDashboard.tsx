@@ -11,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
-  ToggleRight, Trash2, Search, UserCog, Plus, X
+  ToggleRight, Trash2, Search, UserCog, Plus, X, Mail
 } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
@@ -31,6 +32,29 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  const handleInviteStaff = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-staff", {
+        body: { email: inviteEmail.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message || "Staff member invited!");
+      setInviteEmail("");
+      setInviteOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to invite staff member");
+    } finally {
+      setInviting(false);
+    }
+  };
 
   // Fetch current user role via direct query (user_roles not in generated types yet)
   const { data: myRole, isLoading: roleLoading } = useQuery({
@@ -306,6 +330,12 @@ const AdminDashboard = () => {
               {/* Users Tab (Admin only) */}
               {myRole === "admin" && (
                 <TabsContent value="users">
+                  <div className="flex justify-end mb-4">
+                    <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-2">
+                      <Mail className="w-4 h-4" />
+                      Invite Staff by Email
+                    </Button>
+                  </div>
                   {usersLoading ? <LoadingCards /> : filteredUsers.length === 0 ? (
                     <EmptyState label="No users found" />
                   ) : (
@@ -355,6 +385,44 @@ const AdminDashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Invite Staff Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Invite Staff Member</DialogTitle>
+            <DialogDescription>
+              Enter an email address to invite someone as a worker. If they don't have an account yet, they'll receive an invitation email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleInviteStaff()}
+                  className="pl-9"
+                  disabled={inviting}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setInviteOpen(false); setInviteEmail(""); }} disabled={inviting}>
+                Cancel
+              </Button>
+              <Button onClick={handleInviteStaff} disabled={inviting || !inviteEmail.trim()} className="gap-2">
+                {inviting ? "Sending..." : (
+                  <><Mail className="w-4 h-4" /> Send Invite</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
