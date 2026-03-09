@@ -430,6 +430,31 @@ const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Remove Role Confirmation */}
+      <AlertDialog open={!!removeRoleTarget} onOpenChange={(open) => !open && setRemoveRoleTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove staff role?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the <span className="font-semibold capitalize">{removeRoleTarget?.role}</span> role from{" "}
+              <span className="font-semibold">{removeRoleTarget?.name}</span>. They will lose all staff permissions immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeRoleTarget) removeRole(removeRoleTarget.userId);
+                setRemoveRoleTarget(null);
+              }}
+            >
+              Remove Role
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
