@@ -371,7 +371,12 @@ const AdminDashboard = () => {
                                 </SelectContent>
                               </Select>
                             ) : (
-                              <Button variant="ghost" size="icon" onClick={() => removeRole(u.user_id)} title="Remove role">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setRemoveRoleTarget({ userId: u.user_id, name: u.full_name || "this user", role: u.staffRole })}
+                                title="Remove role"
+                              >
                                 <X className="w-4 h-4 text-destructive" />
                               </Button>
                             )}
