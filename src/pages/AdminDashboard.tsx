@@ -330,6 +330,12 @@ const AdminDashboard = () => {
               {/* Users Tab (Admin only) */}
               {myRole === "admin" && (
                 <TabsContent value="users">
+                  <div className="flex justify-end mb-4">
+                    <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-2">
+                      <Mail className="w-4 h-4" />
+                      Invite Staff by Email
+                    </Button>
+                  </div>
                   {usersLoading ? <LoadingCards /> : filteredUsers.length === 0 ? (
                     <EmptyState label="No users found" />
                   ) : (
@@ -379,6 +385,44 @@ const AdminDashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Invite Staff Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Invite Staff Member</DialogTitle>
+            <DialogDescription>
+              Enter an email address to invite someone as a worker. If they don't have an account yet, they'll receive an invitation email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleInviteStaff()}
+                  className="pl-9"
+                  disabled={inviting}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setInviteOpen(false); setInviteEmail(""); }} disabled={inviting}>
+                Cancel
+              </Button>
+              <Button onClick={handleInviteStaff} disabled={inviting || !inviteEmail.trim()} className="gap-2">
+                {inviting ? "Sending..." : (
+                  <><Mail className="w-4 h-4" /> Send Invite</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
