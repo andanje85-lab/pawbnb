@@ -11,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
-  ToggleRight, Trash2, Search, UserCog, Plus, X
+  ToggleRight, Trash2, Search, UserCog, Plus, X, Mail
 } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
