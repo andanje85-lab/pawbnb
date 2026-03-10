@@ -17,9 +17,10 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
-  ToggleRight, Trash2, Search, UserCog, Plus, X, Mail
+  ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
+  UserPlus, UserMinus
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
 
 const statusColors: Record<string, string> = {
@@ -51,6 +52,7 @@ const AdminDashboard = () => {
       setInviteEmail("");
       setInviteOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
     } catch (err: any) {
       toast.error(err.message || "Failed to invite staff member");
     } finally {
@@ -58,7 +60,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch current user role via direct query (user_roles not in generated types yet)
+  // Fetch current user role
   const { data: myRole, isLoading: roleLoading } = useQuery({
     queryKey: ["my-role", user?.id],
     queryFn: async () => {
@@ -106,7 +108,6 @@ const AdminDashboard = () => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      // Fetch roles for each user (user_roles not in generated types yet — use any cast)
       const { data: roles } = await (supabase as any).from("user_roles").select("user_id, role");
       const roleMap: Record<string, string> = {};
       ((roles || []) as any[]).forEach((r) => { roleMap[r.user_id] = r.role; });
@@ -114,6 +115,47 @@ const AdminDashboard = () => {
     },
     enabled: myRole === "admin",
   });
+
+  // Audit logs (admin only)
+  const { data: auditLogs, isLoading: auditLoading } = useQuery({
+    queryKey: ["audit-logs"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      // Enrich with profile names
+      const userIds = [...new Set([
+        ...(data || []).map((l: any) => l.actor_id),
+        ...(data || []).map((l: any) => l.target_user_id),
+      ])];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds as string[]);
+      const nameMap: Record<string, string> = {};
+      (profiles || []).forEach((p) => { nameMap[p.user_id] = p.full_name || "Unknown"; });
+      return (data || []).map((log: any) => ({
+        ...log,
+        actorName: nameMap[log.actor_id] || "Unknown",
+        targetName: nameMap[log.target_user_id] || "Unknown",
+      }));
+    },
+    enabled: myRole === "admin",
+  });
+
+  const writeAuditLog = async (action: string, targetUserId: string, role: string) => {
+    if (!user) return;
+    await (supabase as any).from("audit_logs").insert({
+      action,
+      actor_id: user.id,
+      target_user_id: targetUserId,
+      role,
+    });
+    queryClient.invalidateQueries({ queryKey: ["audit-logs"] });
+  };
 
   const getListingPhoto = (listing: any) => {
     const photos = (listing?.listing_photos || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
@@ -153,15 +195,17 @@ const AdminDashboard = () => {
     if (error) toast.error((error as any).message);
     else {
       toast.success(`Role '${role}' assigned`);
+      await writeAuditLog("role_assigned", userId, role);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     }
   };
 
-  const removeRole = async (userId: string) => {
+  const removeRole = async (userId: string, role: string) => {
     const { error } = await (supabase as any).from("user_roles").delete().eq("user_id", userId);
     if (error) toast.error(error.message);
     else {
       toast.success("Role removed");
+      await writeAuditLog("role_removed", userId, role);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     }
   };
@@ -195,6 +239,10 @@ const AdminDashboard = () => {
 
   const filteredUsers = (allUsers || []).filter(
     (u) => !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.city?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredAuditLogs = (auditLogs || []).filter(
+    (l: any) => !search || l.actorName?.toLowerCase().includes(search.toLowerCase()) || l.targetName?.toLowerCase().includes(search.toLowerCase()) || l.role?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -235,6 +283,12 @@ const AdminDashboard = () => {
                 <TabsTrigger value="listings">Listings</TabsTrigger>
                 <TabsTrigger value="bookings">Bookings</TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
+                {myRole === "admin" && (
+                  <TabsTrigger value="audit" className="gap-1.5">
+                    <ClipboardList className="w-3.5 h-3.5" />
+                    Audit Log
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               {/* Listings Tab */}
@@ -387,6 +441,61 @@ const AdminDashboard = () => {
                   )}
                 </TabsContent>
               )}
+
+              {/* Audit Log Tab (Admin only) */}
+              {myRole === "admin" && (
+                <TabsContent value="audit">
+                  {auditLoading ? (
+                    <LoadingCards />
+                  ) : filteredAuditLogs.length === 0 ? (
+                    <EmptyState label="No audit log entries yet" />
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredAuditLogs.map((log: any) => {
+                        const isAssign = log.action === "role_assigned";
+                        return (
+                          <motion.div
+                            key={log.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card"
+                          >
+                            <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                              isAssign ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}>
+                              {isAssign
+                                ? <UserPlus className="w-4 h-4" />
+                                : <UserMinus className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-foreground">
+                                <span className="font-medium">{log.actorName}</span>
+                                {" "}
+                                <span className="text-muted-foreground">
+                                  {isAssign ? "assigned" : "removed"}
+                                </span>
+                                {" "}
+                                <Badge variant="outline" className="text-xs capitalize mx-0.5">{log.role}</Badge>
+                                {" "}
+                                <span className="text-muted-foreground">
+                                  {isAssign ? "role to" : "role from"}
+                                </span>
+                                {" "}
+                                <span className="font-medium">{log.targetName}</span>
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                                {" · "}
+                                {format(new Date(log.created_at), "MMM d, yyyy 'at' h:mm a")}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              )}
             </Tabs>
           </motion.div>
         </div>
@@ -446,7 +555,7 @@ const AdminDashboard = () => {
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (removeRoleTarget) removeRole(removeRoleTarget.userId);
+                if (removeRoleTarget) removeRole(removeRoleTarget.userId, removeRoleTarget.role);
                 setRemoveRoleTarget(null);
               }}
             >
@@ -479,7 +588,7 @@ const LoadingCards = () => (
 
 const EmptyState = ({ label }: { label: string }) => (
   <div className="text-center py-12">
-    <ShieldCheck className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+    <ClipboardList className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
     <p className="text-muted-foreground text-sm">{label}</p>
   </div>
 );
