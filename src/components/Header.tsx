@@ -93,13 +93,29 @@ const Header = () => {
               <a href="#listings" className="block text-sm font-medium text-muted-foreground">Explore</a>
               <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">How It Works</a>
               <a href="#trust" className="block text-sm font-medium text-muted-foreground">Trust & Safety</a>
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2">
                 {user ? (
                   <>
-                    <Link to="/dashboard" className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
-                    </Link>
-                    <Button variant="outline" size="sm" className="flex-1" onClick={signOut}>Sign Out</Button>
+                    <div className="flex gap-2">
+                      <Link to="/dashboard" className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
+                      </Link>
+                      <Link to="/profile" className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                      </Link>
+                    </div>
+                    {staffRole && (
+                      <Link to="/admin">
+                        <Button variant="outline" size="sm" className="w-full gap-1">
+                          <ShieldCheck className="w-4 h-4" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full" onClick={signOut}>
+                      <LogOut className="w-4 h-4 mr-1" />
+                      Sign Out
+                    </Button>
                   </>
                 ) : (
                   <Link to="/auth" className="flex-1">
