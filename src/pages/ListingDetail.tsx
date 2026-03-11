@@ -216,6 +216,29 @@ const ListingDetail = () => {
       });
       if (error) throw error;
       toast.success(`Booking request sent for ${nights} night${nights > 1 ? "s" : ""}!`);
+
+      // Fire-and-forget admin notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      supabase.functions.invoke("send-booking-notification", {
+        body: {
+          bookingId: "new",
+          listingTitle: listing.title,
+          listingCity: listing.location,
+          checkIn: dateRange.from!.toISOString().split("T")[0],
+          checkOut: dateRange.to!.toISOString().split("T")[0],
+          numDogs,
+          totalPrice: nights * listing.price,
+          guestEmail: user.email,
+          guestName: profile?.full_name || user.email,
+          message: message || null,
+        },
+      });
+
       setDateRange(undefined);
       setMessage("");
     } catch (error: any) {
