@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
   ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
-  UserPlus, UserMinus
+  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
@@ -29,11 +29,14 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 border-red-200",
 };
 
+type BookingStatusFilter = "all" | "pending" | "confirmed" | "cancelled";
+
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<BookingStatusFilter>("all");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -85,7 +88,7 @@ const AdminDashboard = () => {
     enabled: !!myRole,
   });
 
-  // All bookings (admin/worker)
+  // All bookings (admin/worker) — enriched with guest profile
   const { data: allBookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ["admin-bookings"],
     queryFn: async () => {
@@ -94,7 +97,21 @@ const AdminDashboard = () => {
         .select("*, listings(title, city)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Fetch guest profiles
+      const guestIds = [...new Set((data || []).map((b) => b.guest_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .in("user_id", guestIds as string[]);
+      const profileMap: Record<string, { full_name: string | null; phone: string | null }> = {};
+      (profiles || []).forEach((p) => { profileMap[p.user_id] = { full_name: p.full_name, phone: p.phone }; });
+
+      return (data || []).map((b) => ({
+        ...b,
+        guestName: profileMap[b.guest_id]?.full_name || null,
+        guestPhone: profileMap[b.guest_id]?.phone || null,
+      }));
     },
     enabled: !!myRole,
   });
@@ -126,7 +143,6 @@ const AdminDashboard = () => {
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      // Enrich with profile names
       const userIds = [...new Set([
         ...(data || []).map((l: any) => l.actor_id),
         ...(data || []).map((l: any) => l.target_user_id),
@@ -145,6 +161,16 @@ const AdminDashboard = () => {
     },
     enabled: myRole === "admin",
   });
+
+  // Revenue stats
+  const revenueStats = useMemo(() => {
+    const bookings = allBookings || [];
+    const confirmed = bookings.filter((b) => b.status === "confirmed");
+    const totalRevenue = confirmed.reduce((sum, b) => sum + Number(b.total_price), 0);
+    const avgValue = confirmed.length > 0 ? totalRevenue / confirmed.length : 0;
+    const pending = bookings.filter((b) => b.status === "pending").length;
+    return { totalRevenue, avgValue, confirmedCount: confirmed.length, pendingCount: pending };
+  }, [allBookings]);
 
   const writeAuditLog = async (action: string, targetUserId: string, role: string) => {
     if (!user) return;
@@ -210,6 +236,51 @@ const AdminDashboard = () => {
     }
   };
 
+  // CSV Export helpers
+  const exportListingsCSV = () => {
+    const rows = filteredListings.map((l) => ({
+      Title: l.title,
+      City: l.city || "",
+      "Price/Night": l.price_per_night,
+      "Max Dogs": l.max_dogs,
+      Status: l.is_active ? "Active" : "Inactive",
+      Created: format(new Date(l.created_at), "yyyy-MM-dd"),
+    }));
+    downloadCSV(rows, "listings.csv");
+  };
+
+  const exportBookingsCSV = () => {
+    const rows = filteredBookings.map((b) => ({
+      Listing: (b.listings as any)?.title || "",
+      City: (b.listings as any)?.city || "",
+      "Guest Name": (b as any).guestName || "",
+      "Check In": b.check_in,
+      "Check Out": b.check_out,
+      Dogs: b.number_of_dogs,
+      "Total Price": b.total_price,
+      Status: b.status,
+      Created: format(new Date(b.created_at), "yyyy-MM-dd"),
+    }));
+    downloadCSV(rows, "bookings.csv");
+  };
+
+  const downloadCSV = (rows: Record<string, any>[], filename: string) => {
+    if (rows.length === 0) { toast.error("No data to export"); return; }
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers.map((h) => `"${String(r[h]).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${rows.length} rows`);
+  };
+
   if (authLoading || roleLoading) return null;
 
   if (!user || !myRole) {
@@ -233,9 +304,11 @@ const AdminDashboard = () => {
     (l) => !search || l.title?.toLowerCase().includes(search.toLowerCase()) || l.city?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredBookings = (allBookings || []).filter(
-    (b) => !search || (b.listings as any)?.title?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredBookings = (allBookings || []).filter((b) => {
+    const matchesSearch = !search || (b.listings as any)?.title?.toLowerCase().includes(search.toLowerCase()) || (b as any).guestName?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = bookingStatusFilter === "all" || b.status === bookingStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const filteredUsers = (allUsers || []).filter(
     (u) => !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.city?.toLowerCase().includes(search.toLowerCase())
@@ -259,11 +332,13 @@ const AdminDashboard = () => {
             <p className="text-muted-foreground mb-6">Platform management for PawBnB staff</p>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-              <StatCard icon={<Dog className="w-5 h-5 text-primary" />} label="Total Listings" value={allListings?.length ?? "—"} />
-              <StatCard icon={<CalendarDays className="w-5 h-5 text-primary" />} label="Total Bookings" value={allBookings?.length ?? "—"} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+              <StatCard icon={<Dog className="w-5 h-5 text-primary" />} label="Listings" value={allListings?.length ?? "—"} />
+              <StatCard icon={<CalendarDays className="w-5 h-5 text-primary" />} label="Bookings" value={allBookings?.length ?? "—"} />
+              <StatCard icon={<DollarSign className="w-5 h-5 text-primary" />} label="Total Revenue" value={bookingsLoading ? "—" : `$${revenueStats.totalRevenue.toLocaleString()}`} />
+              <StatCard icon={<TrendingUp className="w-5 h-5 text-primary" />} label="Avg Booking" value={bookingsLoading ? "—" : `$${Math.round(revenueStats.avgValue).toLocaleString()}`} />
               {myRole === "admin" && (
-                <StatCard icon={<Users className="w-5 h-5 text-primary" />} label="Total Users" value={allUsers?.length ?? "—"} />
+                <StatCard icon={<Users className="w-5 h-5 text-primary" />} label="Users" value={allUsers?.length ?? "—"} />
               )}
             </div>
 
@@ -281,7 +356,14 @@ const AdminDashboard = () => {
             <Tabs defaultValue="listings">
               <TabsList className="mb-6">
                 <TabsTrigger value="listings">Listings</TabsTrigger>
-                <TabsTrigger value="bookings">Bookings</TabsTrigger>
+                <TabsTrigger value="bookings">
+                  Bookings
+                  {revenueStats.pendingCount > 0 && (
+                    <span className="ml-1.5 bg-yellow-500 text-white text-xs rounded-full w-4 h-4 inline-flex items-center justify-center font-bold">
+                      {revenueStats.pendingCount}
+                    </span>
+                  )}
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
@@ -293,6 +375,11 @@ const AdminDashboard = () => {
 
               {/* Listings Tab */}
               <TabsContent value="listings">
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={exportListingsCSV} className="gap-2">
+                    <Download className="w-4 h-4" /> Export CSV
+                  </Button>
+                </div>
                 {listingsLoading ? <LoadingCards /> : filteredListings.length === 0 ? (
                   <EmptyState label="No listings found" />
                 ) : (
@@ -339,12 +426,44 @@ const AdminDashboard = () => {
 
               {/* Bookings Tab */}
               <TabsContent value="bookings">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                  {/* Status Filter Pills */}
+                  <div className="flex gap-2 flex-wrap">
+                    {(["all", "pending", "confirmed", "cancelled"] as BookingStatusFilter[]).map((s) => {
+                      const count = s === "all"
+                        ? (allBookings || []).length
+                        : (allBookings || []).filter((b) => b.status === s).length;
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => setBookingStatusFilter(s)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors capitalize ${
+                            bookingStatusFilter === s
+                              ? s === "all" ? "bg-primary text-primary-foreground border-primary"
+                              : s === "pending" ? "bg-yellow-500 text-white border-yellow-500"
+                              : s === "confirmed" ? "bg-green-600 text-white border-green-600"
+                              : "bg-destructive text-destructive-foreground border-destructive"
+                              : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {s} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={exportBookingsCSV} className="gap-2">
+                    <Download className="w-4 h-4" /> Export CSV
+                  </Button>
+                </div>
+
                 {bookingsLoading ? <LoadingCards /> : filteredBookings.length === 0 ? (
                   <EmptyState label="No bookings found" />
                 ) : (
                   <div className="space-y-3">
                     {filteredBookings.map((booking) => {
                       const listingData = booking.listings as any;
+                      const guestName = (booking as any).guestName;
+                      const guestPhone = (booking as any).guestPhone;
                       return (
                         <motion.div key={booking.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                           className="p-4 rounded-xl border border-border bg-card"
@@ -370,6 +489,24 @@ const AdminDashboard = () => {
                             </span>
                             <span className="font-medium text-foreground">${booking.total_price}</span>
                           </div>
+                          {/* Guest info */}
+                          {(guestName || guestPhone) && (
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-2 py-2 border-t border-border/50">
+                              {guestName && (
+                                <span className="flex items-center gap-1">
+                                  <User className="w-3 h-3" /> {guestName}
+                                </span>
+                              )}
+                              {guestPhone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3 h-3" /> {guestPhone}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {booking.message && (
+                            <p className="text-xs text-muted-foreground italic mb-2 truncate">"{booking.message}"</p>
+                          )}
                           {booking.status === "pending" && (
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed")}>Confirm</Button>
