@@ -18,9 +18,13 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
   ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
-  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone
+  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  LineChart, Line, Area, AreaChart,
+} from "recharts";
 import listing1 from "@/assets/listing-1.jpg";
 
 const statusColors: Record<string, string> = {
