@@ -176,6 +176,22 @@ const AdminDashboard = () => {
     return { totalRevenue, avgValue, confirmedCount: confirmed.length, pendingCount: pending };
   }, [allBookings]);
 
+  // Monthly revenue chart data
+  const monthlyRevenueData = useMemo(() => {
+    const confirmed = (allBookings || []).filter((b) => b.status === "confirmed");
+    const map: Record<string, { month: string; revenue: number; bookings: number }> = {};
+    confirmed.forEach((b) => {
+      const key = format(new Date(b.check_in), "yyyy-MM");
+      const label = format(new Date(b.check_in), "MMM yyyy");
+      if (!map[key]) map[key] = { month: label, revenue: 0, bookings: 0 };
+      map[key].revenue += Number(b.total_price);
+      map[key].bookings += 1;
+    });
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v);
+  }, [allBookings]);
+
   const writeAuditLog = async (action: string, targetUserId: string, role: string) => {
     if (!user) return;
     await (supabase as any).from("audit_logs").insert({
