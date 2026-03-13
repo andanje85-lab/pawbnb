@@ -80,17 +80,24 @@ const Dashboard = () => {
     enabled: !!user && !!profile?.is_host,
   });
 
-  // Fetch bookings for host's listings
+  // Fetch bookings for host's listings (with guest email)
   const { data: hostBookings, isLoading: hostBookingsLoading } = useQuery({
     queryKey: ["host-bookings", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, listings!inner(title, host_id), profiles:guest_id(full_name)")
+        .select("*, listings!inner(title, city, host_id), profiles:guest_id(full_name, phone)")
         .eq("listings.host_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      // Fetch guest emails via auth — we need them for notifications
+      const guestIds = [...new Set((data || []).map((b) => b.guest_id))];
+      const { data: guestProfiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .in("user_id", guestIds.length > 0 ? guestIds : ["__none__"]);
+      const profileMap = Object.fromEntries((guestProfiles || []).map((p) => [p.user_id, p]));
+      return (data || []).map((b) => ({ ...b, guestProfile: profileMap[b.guest_id] }));
     },
     enabled: !!user && !!profile?.is_host,
   });
