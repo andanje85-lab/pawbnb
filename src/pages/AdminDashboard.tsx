@@ -384,6 +384,10 @@ const AdminDashboard = () => {
                     </span>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="revenue" className="gap-1.5">
+                  <BarChart2 className="w-3.5 h-3.5" />
+                  Revenue
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
