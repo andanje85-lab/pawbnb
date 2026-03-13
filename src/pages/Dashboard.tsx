@@ -145,16 +145,49 @@ const Dashboard = () => {
     }
   };
 
-  const updateBookingStatus = async (bookingId: string, status: string) => {
+  const updateBookingStatus = async (bookingId: string, status: string, booking?: any) => {
     const { error } = await supabase
       .from("bookings")
       .update({ status })
       .eq("id", bookingId);
     if (error) {
       toast.error("Failed to update booking");
-    } else {
-      toast.success(`Booking ${status}`);
-      queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+      return;
+    }
+    toast.success(status === "confirmed" ? "Booking confirmed" : "Booking declined");
+    queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+
+    // Send email notification to guest
+    if (booking && (status === "confirmed" || status === "cancelled")) {
+      const listingData = booking.listings as any;
+      const guestProfile = booking.guestProfile as any;
+      // Get guest email from auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Fetch guest email via admin lookup (using service role isn't available client-side)
+        // We'll use the guest_id to look up their email from auth metadata stored in profile or use their user id
+        // Since we can't access auth.users client-side, we pass what we have and the edge fn uses it
+        try {
+          await supabase.functions.invoke("send-booking-notification", {
+            body: {
+              type: status === "confirmed" ? "booking_confirmed" : "booking_declined",
+              bookingId: booking.id,
+              listingTitle: listingData?.title || "your listing",
+              listingCity: listingData?.city || "",
+              checkIn: booking.check_in,
+              checkOut: booking.check_out,
+              numDogs: booking.number_of_dogs,
+              totalPrice: booking.total_price,
+              guestEmail: booking.guest_email || "",
+              guestName: guestProfile?.full_name || "there",
+              message: booking.message,
+            },
+          });
+        } catch (e) {
+          // Notification failure is non-blocking
+          console.warn("Failed to send booking notification email", e);
+        }
+      }
     }
   };
 
