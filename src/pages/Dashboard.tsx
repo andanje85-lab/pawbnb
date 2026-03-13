@@ -422,10 +422,10 @@ const Dashboard = () => {
                             )}
                             {booking.status === "pending" && (
                               <div className="flex gap-2">
-                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed")}>
+                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
                                   Confirm
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled")}>
+                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
                                   Decline
                                 </Button>
                               </div>
