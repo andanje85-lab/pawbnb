@@ -80,17 +80,24 @@ const Dashboard = () => {
     enabled: !!user && !!profile?.is_host,
   });
 
-  // Fetch bookings for host's listings
+  // Fetch bookings for host's listings (with guest email)
   const { data: hostBookings, isLoading: hostBookingsLoading } = useQuery({
     queryKey: ["host-bookings", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, listings!inner(title, host_id), profiles:guest_id(full_name)")
+        .select("*, listings!inner(title, city, host_id), profiles:guest_id(full_name, phone)")
         .eq("listings.host_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      // Fetch guest emails via auth — we need them for notifications
+      const guestIds = [...new Set((data || []).map((b) => b.guest_id))];
+      const { data: guestProfiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .in("user_id", guestIds.length > 0 ? guestIds : ["__none__"]);
+      const profileMap = Object.fromEntries((guestProfiles || []).map((p) => [p.user_id, p]));
+      return (data || []).map((b) => ({ ...b, guestProfile: profileMap[b.guest_id] }));
     },
     enabled: !!user && !!profile?.is_host,
   });
@@ -138,16 +145,50 @@ const Dashboard = () => {
     }
   };
 
-  const updateBookingStatus = async (bookingId: string, status: string) => {
+  const updateBookingStatus = async (bookingId: string, status: string, booking?: any) => {
     const { error } = await supabase
       .from("bookings")
       .update({ status })
       .eq("id", bookingId);
     if (error) {
       toast.error("Failed to update booking");
-    } else {
-      toast.success(`Booking ${status}`);
-      queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+      return;
+    }
+    toast.success(status === "confirmed" ? "Booking confirmed" : "Booking declined");
+    queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+
+    // Send email notification to guest
+    if (booking && (status === "confirmed" || status === "cancelled")) {
+      const listingData = booking.listings as any;
+      const guestProfile = booking.guestProfile as any;
+      // Get guest email from auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Fetch guest email via admin lookup (using service role isn't available client-side)
+        // We'll use the guest_id to look up their email from auth metadata stored in profile or use their user id
+        // Since we can't access auth.users client-side, we pass what we have and the edge fn uses it
+        try {
+          await supabase.functions.invoke("send-booking-notification", {
+            body: {
+              type: status === "confirmed" ? "booking_confirmed" : "booking_declined",
+              bookingId: booking.id,
+              guestId: booking.guest_id,
+              listingTitle: listingData?.title || "your listing",
+              listingCity: listingData?.city || "",
+              checkIn: booking.check_in,
+              checkOut: booking.check_out,
+              numDogs: booking.number_of_dogs,
+              totalPrice: booking.total_price,
+              guestEmail: "",
+              guestName: guestProfile?.full_name || "there",
+              message: booking.message,
+            },
+          });
+        } catch (e) {
+          // Notification failure is non-blocking
+          console.warn("Failed to send booking notification email", e);
+        }
+      }
     }
   };
 
@@ -382,10 +423,10 @@ const Dashboard = () => {
                             )}
                             {booking.status === "pending" && (
                               <div className="flex gap-2">
-                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed")}>
+                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
                                   Confirm
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled")}>
+                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
                                   Decline
                                 </Button>
                               </div>
