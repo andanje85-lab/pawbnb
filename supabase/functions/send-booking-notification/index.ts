@@ -26,6 +26,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Admin client to look up guest emails
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } =
       await supabase.auth.getClaims(token);
