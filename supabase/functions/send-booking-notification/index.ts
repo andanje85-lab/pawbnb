@@ -46,13 +46,14 @@ Deno.serve(async (req) => {
     const {
       type, // "new_booking" | "booking_confirmed" | "booking_declined"
       bookingId,
+      guestId,
       listingTitle,
       listingCity,
       checkIn,
       checkOut,
       numDogs,
       totalPrice,
-      guestEmail,
+      guestEmail: guestEmailFromClient,
       guestName,
       message,
     } = body;
@@ -62,7 +63,15 @@ Deno.serve(async (req) => {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
+    // Resolve guest email: prefer value from client, else look up via admin
+    let guestEmail = guestEmailFromClient;
+    if (!guestEmail && guestId) {
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(guestId);
+      guestEmail = userData?.user?.email || "";
+    }
+
     const adminEmail = "andanje85@gmail.com";
+
 
     let emailHtml = "";
     let subject = "";
