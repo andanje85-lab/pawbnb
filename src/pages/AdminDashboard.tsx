@@ -18,9 +18,13 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
   ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
-  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone
+  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  LineChart, Line, Area, AreaChart,
+} from "recharts";
 import listing1 from "@/assets/listing-1.jpg";
 
 const statusColors: Record<string, string> = {
@@ -170,6 +174,22 @@ const AdminDashboard = () => {
     const avgValue = confirmed.length > 0 ? totalRevenue / confirmed.length : 0;
     const pending = bookings.filter((b) => b.status === "pending").length;
     return { totalRevenue, avgValue, confirmedCount: confirmed.length, pendingCount: pending };
+  }, [allBookings]);
+
+  // Monthly revenue chart data
+  const monthlyRevenueData = useMemo(() => {
+    const confirmed = (allBookings || []).filter((b) => b.status === "confirmed");
+    const map: Record<string, { month: string; revenue: number; bookings: number }> = {};
+    confirmed.forEach((b) => {
+      const key = format(new Date(b.check_in), "yyyy-MM");
+      const label = format(new Date(b.check_in), "MMM yyyy");
+      if (!map[key]) map[key] = { month: label, revenue: 0, bookings: 0 };
+      map[key].revenue += Number(b.total_price);
+      map[key].bookings += 1;
+    });
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v);
   }, [allBookings]);
 
   const writeAuditLog = async (action: string, targetUserId: string, role: string) => {
@@ -364,6 +384,10 @@ const AdminDashboard = () => {
                     </span>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="revenue" className="gap-1.5">
+                  <BarChart2 className="w-3.5 h-3.5" />
+                  Revenue
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
@@ -373,8 +397,86 @@ const AdminDashboard = () => {
                 )}
               </TabsList>
 
+              {/* Revenue Tab */}
+              <TabsContent value="revenue">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  {bookingsLoading ? (
+                    <Skeleton className="h-80 w-full rounded-xl" />
+                  ) : monthlyRevenueData.length === 0 ? (
+                    <div className="text-center py-16">
+                      <DollarSign className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+                      <p className="text-muted-foreground">No confirmed bookings yet — revenue will appear here once bookings are confirmed.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Summary cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="rounded-xl border border-border bg-card p-5">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Revenue</p>
+                          <p className="font-serif text-3xl font-bold text-foreground">${revenueStats.totalRevenue.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground mt-1">from confirmed bookings</p>
+                        </div>
+                        <div className="rounded-xl border border-border bg-card p-5">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Avg Booking Value</p>
+                          <p className="font-serif text-3xl font-bold text-foreground">${Math.round(revenueStats.avgValue).toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground mt-1">per confirmed booking</p>
+                        </div>
+                        <div className="rounded-xl border border-border bg-card p-5">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Confirmed Bookings</p>
+                          <p className="font-serif text-3xl font-bold text-foreground">{revenueStats.confirmedCount}</p>
+                          <p className="text-xs text-muted-foreground mt-1">total confirmed</p>
+                        </div>
+                      </div>
+
+                      {/* Revenue bar chart */}
+                      <div className="rounded-xl border border-border bg-card p-6">
+                        <h3 className="font-serif font-bold text-foreground mb-1">Monthly Revenue</h3>
+                        <p className="text-xs text-muted-foreground mb-5">Confirmed booking revenue grouped by check-in month</p>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={monthlyRevenueData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                            <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toLocaleString()}`} width={70} />
+                            <Tooltip
+                              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }}
+                              formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                            />
+                            <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Bookings count area chart */}
+                      <div className="rounded-xl border border-border bg-card p-6">
+                        <h3 className="font-serif font-bold text-foreground mb-1">Booking Volume</h3>
+                        <p className="text-xs text-muted-foreground mb-5">Number of confirmed bookings per month</p>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <AreaChart data={monthlyRevenueData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                            <defs>
+                              <linearGradient id="bookingsGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                            <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} allowDecimals={false} width={40} />
+                            <Tooltip
+                              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }}
+                              formatter={(value: number) => [value, "Bookings"]}
+                            />
+                            <Area type="monotone" dataKey="bookings" stroke="hsl(var(--accent))" strokeWidth={2} fill="url(#bookingsGradient)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </TabsContent>
+
               {/* Listings Tab */}
               <TabsContent value="listings">
+
                 <div className="flex justify-end mb-4">
                   <Button variant="outline" size="sm" onClick={exportListingsCSV} className="gap-2">
                     <Download className="w-4 h-4" /> Export CSV
