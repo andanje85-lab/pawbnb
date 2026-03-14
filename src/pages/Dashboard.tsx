@@ -37,6 +37,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
+  const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
 
   // Fetch profile to check host status
   const { data: profile } = useQuery({
