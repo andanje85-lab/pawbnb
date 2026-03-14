@@ -10,9 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star } from "lucide-react";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
 
@@ -27,6 +37,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
+  const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
 
   // Fetch profile to check host status
   const { data: profile } = useQuery({
@@ -192,6 +203,21 @@ const Dashboard = () => {
     }
   };
 
+  const cancelBooking = async (bookingId: string) => {
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId)
+      .eq("guest_id", user!.id);
+    if (error) {
+      toast.error("Failed to cancel booking");
+    } else {
+      toast.success("Booking cancelled");
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    }
+    setCancelBookingId(null);
+  };
+
   const getListingPhoto = (listing: any) => {
     const photos = (listing?.listing_photos || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
     return photos[0]?.url || listing1;
@@ -265,22 +291,34 @@ const Dashboard = () => {
                                 </span>
                                 <span className="font-medium text-foreground">${booking.total_price}</span>
                               </div>
-                              {booking.status === "confirmed" && !booking.hasReview && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-2"
-                                  onClick={() => setReviewingBookingId(reviewingBookingId === booking.id ? null : booking.id)}
-                                >
-                                  <Star className="w-3.5 h-3.5 mr-1" />
-                                  Leave a Review
-                                </Button>
-                              )}
-                              {booking.hasReview && (
-                                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
-                                </p>
-                              )}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {booking.status === "confirmed" && !booking.hasReview && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setReviewingBookingId(reviewingBookingId === booking.id ? null : booking.id)}
+                                  >
+                                    <Star className="w-3.5 h-3.5 mr-1" />
+                                    Leave a Review
+                                  </Button>
+                                )}
+                                {booking.hasReview && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1 self-center">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
+                                  </p>
+                                )}
+                                {(booking.status === "pending" || booking.status === "confirmed") && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => setCancelBookingId(booking.id)}
+                                  >
+                                    <XCircle className="w-3.5 h-3.5 mr-1" />
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {reviewingBookingId === booking.id && (
@@ -443,6 +481,27 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Cancel Booking Confirmation Dialog */}
+      <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The booking will be marked as cancelled and the host will be notified.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
+            >
+              Yes, Cancel Booking
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
