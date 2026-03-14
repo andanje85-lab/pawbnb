@@ -10,9 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star } from "lucide-react";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
 
