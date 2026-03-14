@@ -203,6 +203,21 @@ const Dashboard = () => {
     }
   };
 
+  const cancelBooking = async (bookingId: string) => {
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId)
+      .eq("guest_id", user!.id);
+    if (error) {
+      toast.error("Failed to cancel booking");
+    } else {
+      toast.success("Booking cancelled");
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    }
+    setCancelBookingId(null);
+  };
+
   const getListingPhoto = (listing: any) => {
     const photos = (listing?.listing_photos || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
     return photos[0]?.url || listing1;
