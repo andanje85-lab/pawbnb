@@ -291,22 +291,34 @@ const Dashboard = () => {
                                 </span>
                                 <span className="font-medium text-foreground">${booking.total_price}</span>
                               </div>
-                              {booking.status === "confirmed" && !booking.hasReview && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-2"
-                                  onClick={() => setReviewingBookingId(reviewingBookingId === booking.id ? null : booking.id)}
-                                >
-                                  <Star className="w-3.5 h-3.5 mr-1" />
-                                  Leave a Review
-                                </Button>
-                              )}
-                              {booking.hasReview && (
-                                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
-                                </p>
-                              )}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {booking.status === "confirmed" && !booking.hasReview && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setReviewingBookingId(reviewingBookingId === booking.id ? null : booking.id)}
+                                  >
+                                    <Star className="w-3.5 h-3.5 mr-1" />
+                                    Leave a Review
+                                  </Button>
+                                )}
+                                {booking.hasReview && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1 self-center">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
+                                  </p>
+                                )}
+                                {(booking.status === "pending" || booking.status === "confirmed") && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => setCancelBookingId(booking.id)}
+                                  >
+                                    <XCircle className="w-3.5 h-3.5 mr-1" />
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {reviewingBookingId === booking.id && (
