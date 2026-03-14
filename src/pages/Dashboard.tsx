@@ -481,6 +481,27 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Cancel Booking Confirmation Dialog */}
+      <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The booking will be marked as cancelled and the host will be notified.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
+            >
+              Yes, Cancel Booking
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
