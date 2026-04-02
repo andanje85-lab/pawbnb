@@ -433,7 +433,7 @@ const Dashboard = () => {
                   ) : (
                     <div className="space-y-4">
                       {hostBookings.map((booking) => {
-                        const guestProfile = booking.profiles as any;
+                        const guestProfile = booking.guestProfile as any;
                         const listingData = booking.listings as any;
                         return (
                           <motion.div
