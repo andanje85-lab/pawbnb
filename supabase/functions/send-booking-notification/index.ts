@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      type, // "new_booking" | "booking_confirmed" | "booking_declined"
+      type, // "new_booking" | "booking_submitted" | "booking_confirmed" | "booking_declined"
       bookingId,
       guestId,
       listingTitle,
