@@ -224,8 +224,27 @@ const ListingDetail = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      // Fire-and-forget admin notification
       supabase.functions.invoke("send-booking-notification", {
         body: {
+          type: "new_booking",
+          bookingId: "new",
+          listingTitle: listing.title,
+          listingCity: listing.location,
+          checkIn: dateRange.from!.toISOString().split("T")[0],
+          checkOut: dateRange.to!.toISOString().split("T")[0],
+          numDogs,
+          totalPrice: nights * listing.price,
+          guestEmail: user.email,
+          guestName: profile?.full_name || user.email,
+          message: message || null,
+        },
+      });
+
+      // Fire-and-forget guest confirmation email
+      supabase.functions.invoke("send-booking-notification", {
+        body: {
+          type: "booking_submitted",
           bookingId: "new",
           listingTitle: listing.title,
           listingCity: listing.location,
