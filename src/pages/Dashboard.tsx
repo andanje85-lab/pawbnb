@@ -66,10 +66,14 @@ const Dashboard = () => {
       if (error) throw error;
       // Fetch reviews for these bookings
       const bookingIds = (data || []).map((b) => b.id);
-      const { data: reviews } = await supabase
-        .from("reviews")
-        .select("booking_id")
-        .in("booking_id", bookingIds.length > 0 ? bookingIds : ["__none__"]);
+      let reviewedSet = new Set<string>();
+      if (bookingIds.length > 0) {
+        const { data: reviews } = await supabase
+          .from("reviews")
+          .select("booking_id")
+          .in("booking_id", bookingIds);
+        reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
+      }
       const reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
       return (data || []).map((b) => ({ ...b, hasReview: reviewedSet.has(b.id) }));
     },
