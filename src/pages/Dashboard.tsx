@@ -66,11 +66,14 @@ const Dashboard = () => {
       if (error) throw error;
       // Fetch reviews for these bookings
       const bookingIds = (data || []).map((b) => b.id);
-      const { data: reviews } = await supabase
-        .from("reviews")
-        .select("booking_id")
-        .in("booking_id", bookingIds.length > 0 ? bookingIds : ["__none__"]);
-      const reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
+      let reviewedSet = new Set<string>();
+      if (bookingIds.length > 0) {
+        const { data: reviews } = await supabase
+          .from("reviews")
+          .select("booking_id")
+          .in("booking_id", bookingIds);
+        reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
+      }
       return (data || []).map((b) => ({ ...b, hasReview: reviewedSet.has(b.id) }));
     },
     enabled: !!user,
@@ -97,16 +100,19 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, listings!inner(title, city, host_id), profiles:guest_id(full_name, phone)")
+        .select("*, listings!inner(title, city, host_id)")
         .eq("listings.host_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      // Fetch guest emails via auth — we need them for notifications
       const guestIds = [...new Set((data || []).map((b) => b.guest_id))];
-      const { data: guestProfiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, phone")
-        .in("user_id", guestIds.length > 0 ? guestIds : ["__none__"]);
+      let guestProfiles: any[] = [];
+      if (guestIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, phone")
+          .in("user_id", guestIds);
+        guestProfiles = profiles || [];
+      }
       const profileMap = Object.fromEntries((guestProfiles || []).map((p) => [p.user_id, p]));
       return (data || []).map((b) => ({ ...b, guestProfile: profileMap[b.guest_id] }));
     },
@@ -426,7 +432,7 @@ const Dashboard = () => {
                   ) : (
                     <div className="space-y-4">
                       {hostBookings.map((booking) => {
-                        const guestProfile = booking.profiles as any;
+                        const guestProfile = booking.guestProfile as any;
                         const listingData = booking.listings as any;
                         return (
                           <motion.div
