@@ -74,7 +74,7 @@ const Dashboard = () => {
           .in("booking_id", bookingIds);
         reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
       }
-      const reviewedSet = new Set((reviews || []).map((r) => r.booking_id));
+      return (data || []).map((b) => ({ ...b, hasReview: reviewedSet.has(b.id) }));
       return (data || []).map((b) => ({ ...b, hasReview: reviewedSet.has(b.id) }));
     },
     enabled: !!user,
