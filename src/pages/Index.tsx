@@ -1,6 +1,8 @@
+import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ListingCard from "@/components/ListingCard";
+import ListingFilters, { FilterValues } from "@/components/ListingFilters";
 import HowItWorks from "@/components/HowItWorks";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
@@ -17,15 +19,22 @@ import listing5 from "@/assets/listing-5.jpg";
 import listing6 from "@/assets/listing-6.jpg";
 
 const fallbackListings = [
-  { id: "sunny-backyard-haven", image: listing1, title: "Sunny Backyard Haven", location: "Portland, OR", rating: 4.9, reviews: 127, price: 45, verified: true, tags: ["Fenced Yard", "Small Dogs"] },
-  { id: "downtown-dog-friendly-loft", image: listing2, title: "Downtown Dog-Friendly Loft", location: "Austin, TX", rating: 4.8, reviews: 89, price: 55, verified: true, tags: ["All Sizes", "Daycare"] },
-  { id: "country-farmhouse-retreat", image: listing3, title: "Country Farmhouse Retreat", location: "Asheville, NC", rating: 5.0, reviews: 203, price: 38, verified: true, tags: ["Large Yard", "Multiple Dogs"] },
-  { id: "luxury-pool-villa", image: listing4, title: "Luxury Pool Villa", location: "Scottsdale, AZ", rating: 4.9, reviews: 156, price: 75, verified: true, tags: ["Pool", "Premium"] },
-  { id: "coastal-beach-cottage", image: listing5, title: "Coastal Beach Cottage", location: "Malibu, CA", rating: 4.7, reviews: 64, price: 65, verified: false, tags: ["Beach Access", "Medium Dogs"] },
-  { id: "english-garden-cottage", image: listing6, title: "English Garden Cottage", location: "Denver, CO", rating: 4.9, reviews: 198, price: 42, verified: true, tags: ["Garden", "Small Dogs"] },
+  { id: "sunny-backyard-haven", image: listing1, title: "Sunny Backyard Haven", location: "Portland, OR", rating: 4.9, reviews: 127, price: 45, verified: true, tags: ["Fenced Yard", "Small Dogs"], maxDogs: 2, amenities: ["Fenced Yard"] },
+  { id: "downtown-dog-friendly-loft", image: listing2, title: "Downtown Dog-Friendly Loft", location: "Austin, TX", rating: 4.8, reviews: 89, price: 55, verified: true, tags: ["All Sizes", "Daycare"], maxDogs: 3, amenities: ["Daycare"] },
+  { id: "country-farmhouse-retreat", image: listing3, title: "Country Farmhouse Retreat", location: "Asheville, NC", rating: 5.0, reviews: 203, price: 38, verified: true, tags: ["Large Yard", "Multiple Dogs"], maxDogs: 5, amenities: ["Fenced Yard"] },
+  { id: "luxury-pool-villa", image: listing4, title: "Luxury Pool Villa", location: "Scottsdale, AZ", rating: 4.9, reviews: 156, price: 75, verified: true, tags: ["Pool", "Premium"], maxDogs: 2, amenities: ["Pool"] },
+  { id: "coastal-beach-cottage", image: listing5, title: "Coastal Beach Cottage", location: "Malibu, CA", rating: 4.7, reviews: 64, price: 65, verified: false, tags: ["Beach Access", "Medium Dogs"], maxDogs: 2, amenities: ["Beach Access"] },
+  { id: "english-garden-cottage", image: listing6, title: "English Garden Cottage", location: "Denver, CO", rating: 4.9, reviews: 198, price: 42, verified: true, tags: ["Garden", "Small Dogs"], maxDogs: 1, amenities: ["Garden"] },
 ];
 
 const Index = () => {
+  const [filters, setFilters] = useState<FilterValues>({
+    city: "",
+    priceRange: [0, 200],
+    maxDogs: null,
+    amenities: [],
+  });
+
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
     queryFn: async () => {
@@ -41,8 +50,9 @@ const Index = () => {
 
   const hasDbListings = dbListings && dbListings.length > 0;
 
-  const listings = hasDbListings
-    ? dbListings.map((l) => {
+  const allListings = useMemo(() => {
+    if (hasDbListings) {
+      return dbListings.map((l) => {
         const photos = (l.listing_photos || []).sort((a, b) => a.sort_order - b.sort_order);
         return {
           id: l.id,
@@ -54,9 +64,39 @@ const Index = () => {
           price: l.price_per_night,
           verified: true,
           tags: (l.amenities || []).slice(0, 2),
+          maxDogs: l.max_dogs,
+          amenities: l.amenities || [],
         };
-      })
-    : fallbackListings;
+      });
+    }
+    return fallbackListings;
+  }, [dbListings, hasDbListings]);
+
+  const filteredListings = useMemo(() => {
+    return allListings.filter((listing) => {
+      // City filter (case-insensitive partial match)
+      if (filters.city && !listing.location.toLowerCase().includes(filters.city.toLowerCase())) {
+        return false;
+      }
+      // Price range
+      if (listing.price < filters.priceRange[0] || listing.price > filters.priceRange[1]) {
+        return false;
+      }
+      // Dog capacity
+      if (filters.maxDogs !== null && listing.maxDogs < filters.maxDogs) {
+        return false;
+      }
+      // Amenities (all selected must be present)
+      if (filters.amenities.length > 0) {
+        const listingAmenities = listing.amenities.map((a) => a.toLowerCase());
+        const allMatch = filters.amenities.every((a) =>
+          listingAmenities.some((la) => la.includes(a.toLowerCase()))
+        );
+        if (!allMatch) return false;
+      }
+      return true;
+    });
+  }, [allListings, filters]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,7 +109,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-12"
+            className="mb-8"
           >
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-3">
               Top-Rated Hosts Near You
@@ -78,6 +118,11 @@ const Index = () => {
               Loving homes vetted by our team and trusted by thousands of dog parents.
             </p>
           </motion.div>
+
+          {/* Filters */}
+          <div className="mb-8">
+            <ListingFilters onFilterChange={setFilters} />
+          </div>
 
           {isLoading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -89,9 +134,18 @@ const Index = () => {
                 </div>
               ))}
             </div>
+          ) : filteredListings.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <p className="text-lg font-medium text-foreground mb-2">No listings match your filters</p>
+              <p className="text-muted-foreground text-sm">Try adjusting your search criteria or clearing filters.</p>
+            </motion.div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((listing) => (
+              {filteredListings.map((listing) => (
                 <ListingCard key={listing.id} {...listing} />
               ))}
             </div>
