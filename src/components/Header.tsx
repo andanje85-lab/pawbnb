@@ -47,6 +47,7 @@ const Header = () => {
             {user ? (
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
+                <Link to="/messages"><Button variant="ghost" size="sm"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button></Link>
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
                 {staffRole && (
                   <Link to="/admin">
