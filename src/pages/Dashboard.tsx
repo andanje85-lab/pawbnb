@@ -475,16 +475,26 @@ const Dashboard = () => {
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}
-                            {booking.status === "pending" && (
-                              <div className="flex gap-2">
-                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
-                                  Confirm
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
-                                  Decline
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/messages?booking=${booking.id}`)}
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                Message
+                              </Button>
+                              {booking.status === "pending" && (
+                                <>
+                                  <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
+                                    Confirm
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
+                                    Decline
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </motion.div>
                         );
                       })}
