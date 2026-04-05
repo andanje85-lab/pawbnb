@@ -101,10 +101,13 @@ const Header = () => {
                       <Link to="/dashboard" className="flex-1">
                         <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
                       </Link>
-                      <Link to="/profile" className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                      <Link to="/messages" className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button>
                       </Link>
                     </div>
+                    <Link to="/profile">
+                      <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                    </Link>
                     {staffRole && (
                       <Link to="/admin">
                         <Button variant="outline" size="sm" className="w-full gap-1">
