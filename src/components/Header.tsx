@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck } from "lucide-react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
