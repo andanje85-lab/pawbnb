@@ -314,15 +314,25 @@ const Dashboard = () => {
                                   </p>
                                 )}
                                 {(booking.status === "pending" || booking.status === "confirmed") && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => setCancelBookingId(booking.id)}
-                                  >
-                                    <XCircle className="w-3.5 h-3.5 mr-1" />
-                                    Cancel
-                                  </Button>
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => navigate(`/messages?booking=${booking.id}`)}
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                      Message
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => setCancelBookingId(booking.id)}
+                                    >
+                                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </div>
