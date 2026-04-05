@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle } from "lucide-react";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import listing1 from "@/assets/listing-1.jpg";
 
@@ -314,15 +314,25 @@ const Dashboard = () => {
                                   </p>
                                 )}
                                 {(booking.status === "pending" || booking.status === "confirmed") && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => setCancelBookingId(booking.id)}
-                                  >
-                                    <XCircle className="w-3.5 h-3.5 mr-1" />
-                                    Cancel
-                                  </Button>
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => navigate(`/messages?booking=${booking.id}`)}
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                      Message
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => setCancelBookingId(booking.id)}
+                                    >
+                                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -465,16 +475,26 @@ const Dashboard = () => {
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}
-                            {booking.status === "pending" && (
-                              <div className="flex gap-2">
-                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
-                                  Confirm
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
-                                  Decline
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/messages?booking=${booking.id}`)}
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                Message
+                              </Button>
+                              {booking.status === "pending" && (
+                                <>
+                                  <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed", booking)}>
+                                    Confirm
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, "cancelled", booking)}>
+                                    Decline
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </motion.div>
                         );
                       })}

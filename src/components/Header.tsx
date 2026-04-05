@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck } from "lucide-react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,6 +47,7 @@ const Header = () => {
             {user ? (
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
+                <Link to="/messages"><Button variant="ghost" size="sm"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button></Link>
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
                 {staffRole && (
                   <Link to="/admin">
@@ -100,10 +101,13 @@ const Header = () => {
                       <Link to="/dashboard" className="flex-1">
                         <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
                       </Link>
-                      <Link to="/profile" className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                      <Link to="/messages" className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button>
                       </Link>
                     </div>
+                    <Link to="/profile">
+                      <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                    </Link>
                     {staffRole && (
                       <Link to="/admin">
                         <Button variant="outline" size="sm" className="w-full gap-1">
