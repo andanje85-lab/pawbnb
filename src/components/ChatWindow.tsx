@@ -277,8 +277,29 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
+    <div
+      className="flex flex-col h-full relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay */}
+      <AnimatePresence>
+        {dragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm"
+          >
+            <div className="text-center">
+              <Paperclip className="w-10 h-10 mx-auto text-primary mb-2" />
+              <p className="text-sm font-medium text-primary">Drop files here</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex items-center gap-3 p-4 border-b border-border bg-card shrink-0">
         {onBack && (
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
