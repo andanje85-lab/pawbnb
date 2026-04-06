@@ -58,8 +58,10 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
   const [sending, setSending] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   // Fetch messages
   useEffect(() => {
@@ -123,8 +125,7 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const addFiles = (files: File[]) => {
     const valid = files.filter((f) => {
       if (f.size > MAX_FILE_SIZE) {
         toast.error(`${f.name} exceeds 10MB limit`);
@@ -133,7 +134,39 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
       return true;
     });
     setPendingFiles((prev) => [...prev, ...valid].slice(0, 5));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files || []));
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) setDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    dragCounterRef.current = 0;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) addFiles(files);
   };
 
   const removePendingFile = (index: number) => {
@@ -244,8 +277,29 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
+    <div
+      className="flex flex-col h-full relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay */}
+      <AnimatePresence>
+        {dragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm"
+          >
+            <div className="text-center">
+              <Paperclip className="w-10 h-10 mx-auto text-primary mb-2" />
+              <p className="text-sm font-medium text-primary">Drop files here</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex items-center gap-3 p-4 border-b border-border bg-card shrink-0">
         {onBack && (
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
