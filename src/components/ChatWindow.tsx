@@ -71,7 +71,7 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
         .select("*")
         .eq("booking_id", bookingId)
         .order("created_at", { ascending: true });
-      setMessages((data as Message[]) || []);
+      setMessages((data as unknown as Message[]) || []);
     };
 
     fetchMessages();
