@@ -125,8 +125,7 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const addFiles = (files: File[]) => {
     const valid = files.filter((f) => {
       if (f.size > MAX_FILE_SIZE) {
         toast.error(`${f.name} exceeds 10MB limit`);
@@ -135,7 +134,39 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
       return true;
     });
     setPendingFiles((prev) => [...prev, ...valid].slice(0, 5));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files || []));
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) setDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    dragCounterRef.current = 0;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) addFiles(files);
   };
 
   const removePendingFile = (index: number) => {
