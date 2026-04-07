@@ -12,6 +12,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [staffRole, setStaffRole] = useState<string | null>(null);
+  const { permissionState, requestPermission } = useHostNotifications();
 
   useEffect(() => {
     if (!user) { setStaffRole(null); return; }
