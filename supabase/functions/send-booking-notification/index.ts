@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
       guestEmail: guestEmailFromClient,
       guestName,
       message,
+      hostId,
     } = body;
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
