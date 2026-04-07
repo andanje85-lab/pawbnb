@@ -78,7 +78,50 @@ Deno.serve(async (req) => {
     let subject = "";
     let toEmail = "";
 
-    if (type === "booking_submitted") {
+    if (type === "new_booking_host") {
+      // Email to host — new booking request notification
+      let hostEmail = "";
+      if (hostId) {
+        const { data: hostUser } = await supabaseAdmin.auth.admin.getUserById(hostId);
+        hostEmail = hostUser?.user?.email || "";
+      }
+      if (!hostEmail) {
+        return new Response(JSON.stringify({ error: "Host email not found" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      toEmail = hostEmail;
+      subject = `🐾 New booking request for ${listingTitle}`;
+      emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #1a1a1a; margin-bottom: 4px;">🐾 You Have a New Booking Request!</h2>
+          <p style="color: #444; margin-top: 4px;">Great news! A guest has requested to book your listing. Please review the details and confirm or decline.</p>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #166534; margin: 0 0 16px 0;">📋 Booking Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #555; width: 140px;"><strong>Listing</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${listingTitle}${listingCity ? ` — ${listingCity}` : ""}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Check-in</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${checkIn}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Check-out</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${checkOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Dogs</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${numDogs}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Total</strong></td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">$${totalPrice}</td></tr>
+            </table>
+          </div>
+
+          <div style="background: #f0f7ff; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #1a1a1a; margin: 0 0 16px 0;">👤 Guest Info</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #555; width: 140px;"><strong>Name</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${guestName || "Unknown"}</td></tr>
+              ${message ? `<tr><td style="padding: 6px 0; color: #555; vertical-align: top;"><strong>Message</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${message}</td></tr>` : ""}
+            </table>
+          </div>
+
+          <p style="color: #444;">Please log in to your dashboard to confirm or decline this booking.</p>
+          <p style="color: #888; font-size: 13px; margin-top: 32px;">Booking ID: ${bookingId}</p>
+        </div>
+      `;
+    } else if (type === "booking_submitted") {
       // Email to guest — booking request received
       toEmail = guestEmail;
       subject = `🐾 Booking request received — ${listingTitle}`;
