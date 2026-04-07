@@ -258,6 +258,25 @@ const ListingDetail = () => {
         },
       });
 
+      // Fire-and-forget host notification email
+      if (dbListing?.host_id) {
+        supabase.functions.invoke("send-booking-notification", {
+          body: {
+            type: "new_booking_host",
+            bookingId: "new",
+            hostId: dbListing.host_id,
+            listingTitle: listing.title,
+            listingCity: listing.location,
+            checkIn: dateRange.from!.toISOString().split("T")[0],
+            checkOut: dateRange.to!.toISOString().split("T")[0],
+            numDogs,
+            totalPrice: nights * listing.price,
+            guestName: profile?.full_name || user.email,
+            message: message || null,
+          },
+        });
+      }
+
       setDateRange(undefined);
       setMessage("");
     } catch (error: any) {
