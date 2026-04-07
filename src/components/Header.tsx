@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { useHostNotifications } from "@/hooks/useHostNotifications";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
