@@ -51,6 +51,31 @@ const Header = () => {
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
                 <Link to="/messages"><Button variant="ghost" size="sm"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button></Link>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={permissionState !== "granted" ? requestPermission : undefined}
+                        className={permissionState === "granted" ? "text-primary" : "text-muted-foreground"}
+                      >
+                        {permissionState === "granted" ? (
+                          <Bell className="w-5 h-5" />
+                        ) : (
+                          <BellOff className="w-5 h-5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {permissionState === "granted"
+                        ? "Notifications enabled"
+                        : permissionState === "denied"
+                        ? "Notifications blocked — update in browser settings"
+                        : "Enable booking notifications"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
                 {staffRole && (
                   <Link to="/admin">
