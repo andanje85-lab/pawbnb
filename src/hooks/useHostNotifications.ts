@@ -47,6 +47,13 @@ export function useHostNotifications() {
 
           const title = listing?.title || "your listing";
 
+          // Play notification sound
+          try {
+            const audio = new Audio("/notification.wav");
+            audio.volume = 0.6;
+            audio.play().catch(() => {});
+          } catch {}
+
           // In-app toast
           toast.info(`🐾 New booking request for ${title}`, {
             description: `${booking.number_of_dogs} dog(s) · $${booking.total_price}`,
