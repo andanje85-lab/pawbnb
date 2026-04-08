@@ -49,7 +49,7 @@ export function useHostNotifications() {
 
           // Play notification sound
           try {
-            const audio = new Audio("/notification.mp3");
+            const audio = new Audio("/notification.wav");
             audio.volume = 0.6;
             audio.play().catch(() => {});
           } catch {}
