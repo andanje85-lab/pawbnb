@@ -2,12 +2,14 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { Notification } from "@/components/NotificationPanel";
 
 export function useHostNotifications() {
   const { user } = useAuth();
   const [permissionState, setPermissionState] = useState<NotificationPermission>(
     typeof Notification !== "undefined" ? Notification.permission : "denied"
   );
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const hostListingIdsRef = useRef<string[]>([]);
 
   // Fetch the host's listing IDs once
@@ -22,6 +24,20 @@ export function useHostNotifications() {
       });
   }, [user]);
 
+  // Load existing notifications
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        if (data) setNotifications(data as unknown as Notification[]);
+      });
+  }, [user]);
+
   // Subscribe to realtime booking inserts
   useEffect(() => {
     if (!user) return;
@@ -33,12 +49,9 @@ export function useHostNotifications() {
         { event: "INSERT", schema: "public", table: "bookings" },
         async (payload) => {
           const booking = payload.new as any;
-          // Only notify if this booking is for one of the host's listings
           if (!hostListingIdsRef.current.includes(booking.listing_id)) return;
-          // Don't notify if the host made the booking themselves
           if (booking.guest_id === user.id) return;
 
-          // Fetch listing title for the notification
           const { data: listing } = await supabase
             .from("listings")
             .select("title")
@@ -46,6 +59,25 @@ export function useHostNotifications() {
             .maybeSingle();
 
           const title = listing?.title || "your listing";
+          const notifTitle = `🐾 New booking request for ${title}`;
+          const notifBody = `${booking.number_of_dogs} dog(s) · $${booking.total_price}`;
+
+          // Persist to database
+          const { data: inserted } = await supabase
+            .from("notifications")
+            .insert({
+              user_id: user.id,
+              title: notifTitle,
+              body: notifBody,
+              type: "booking",
+              reference_id: booking.id,
+            })
+            .select()
+            .single();
+
+          if (inserted) {
+            setNotifications((prev) => [inserted as unknown as Notification, ...prev].slice(0, 30));
+          }
 
           // Play notification sound
           try {
@@ -55,15 +87,12 @@ export function useHostNotifications() {
           } catch {}
 
           // In-app toast
-          toast.info(`🐾 New booking request for ${title}`, {
-            description: `${booking.number_of_dogs} dog(s) · $${booking.total_price}`,
-            duration: 8000,
-          });
+          toast.info(notifTitle, { description: notifBody, duration: 8000 });
 
           // Browser notification
-          if (Notification.permission === "granted") {
-            new Notification(`🐾 New Booking Request`, {
-              body: `${title} — ${booking.number_of_dogs} dog(s) · $${booking.total_price}`,
+          if (window.Notification?.permission === "granted") {
+            new window.Notification("🐾 New Booking Request", {
+              body: `${title} — ${notifBody}`,
               icon: "/placeholder.svg",
               tag: `booking-${booking.id}`,
             });
@@ -78,10 +107,29 @@ export function useHostNotifications() {
   }, [user]);
 
   const requestPermission = useCallback(async () => {
-    if (typeof Notification === "undefined") return;
-    const result = await Notification.requestPermission();
+    if (typeof window.Notification === "undefined") return;
+    const result = await window.Notification.requestPermission();
     setPermissionState(result);
   }, []);
 
-  return { permissionState, requestPermission };
+  const markRead = useCallback(async (id: string) => {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    if (!user) return;
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  }, [user]);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  return { permissionState, requestPermission, notifications, unreadCount, markRead, markAllRead };
 }

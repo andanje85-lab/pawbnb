@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare, Bell, BellOff } from "lucide-react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useHostNotifications } from "@/hooks/useHostNotifications";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import NotificationPanel from "@/components/NotificationPanel";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [staffRole, setStaffRole] = useState<string | null>(null);
-  const { permissionState, requestPermission } = useHostNotifications();
+  const { permissionState, requestPermission, notifications, unreadCount, markRead, markAllRead } = useHostNotifications();
 
   useEffect(() => {
     if (!user) { setStaffRole(null); return; }
@@ -51,31 +51,14 @@ const Header = () => {
               <>
                 <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
                 <Link to="/messages"><Button variant="ghost" size="sm"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button></Link>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={permissionState !== "granted" ? requestPermission : undefined}
-                        className={permissionState === "granted" ? "text-primary" : "text-muted-foreground"}
-                      >
-                        {permissionState === "granted" ? (
-                          <Bell className="w-5 h-5" />
-                        ) : (
-                          <BellOff className="w-5 h-5" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {permissionState === "granted"
-                        ? "Notifications enabled"
-                        : permissionState === "denied"
-                        ? "Notifications blocked — update in browser settings"
-                        : "Enable booking notifications"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkRead={markRead}
+                  onMarkAllRead={markAllRead}
+                  permissionState={permissionState}
+                  onRequestPermission={requestPermission}
+                />
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
                 {staffRole && (
                   <Link to="/admin">
