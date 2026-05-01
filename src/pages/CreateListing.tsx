@@ -292,7 +292,19 @@ const CreateListing = () => {
               </div>
             </section>
 
-            {/* Amenities */}
+            {/* Map Location */}
+            <section className="mb-10">
+              <Label className="text-base font-semibold flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-primary" />
+                Pin your location
+              </Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin.
+              </p>
+              <LocationPicker value={coords} onChange={setCoords} city={city} />
+            </section>
+
+
             <section className="mb-10">
               <Label className="text-base font-semibold flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-primary" />
