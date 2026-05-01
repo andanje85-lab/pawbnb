@@ -17,6 +17,7 @@ import { differenceInDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import LocationMap from "@/components/LocationMap";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -147,11 +148,13 @@ const ListingDetail = () => {
         description: dbListing.description || "",
         amenities: dbListing.amenities || [],
         maxDogs: dbListing.max_dogs,
+        latitude: (dbListing as any).latitude as number | null,
+        longitude: (dbListing as any).longitude as number | null,
         isDb: true,
       };
     }
     if (mock) {
-      return { ...mock, id: id!, isDb: false };
+      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null };
     }
     return null;
   }, [isUuid, dbListing, mock, id, reviewStats]);
