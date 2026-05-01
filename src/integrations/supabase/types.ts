@@ -133,6 +133,8 @@ export type Database = {
           host_id: string
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           max_dogs: number
           price_per_night: number
           title: string
@@ -147,6 +149,8 @@ export type Database = {
           host_id: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           max_dogs?: number
           price_per_night?: number
           title: string
@@ -161,6 +165,8 @@ export type Database = {
           host_id?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           max_dogs?: number
           price_per_night?: number
           title?: string

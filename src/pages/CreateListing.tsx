@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import LocationPicker from "@/components/LocationPicker";
 
 const AMENITY_OPTIONS = [
   "Fenced Yard", "Dog Beds", "Treats Provided", "Daily Photos",
@@ -30,6 +31,7 @@ const CreateListing = () => {
   const [price, setPrice] = useState("");
   const [maxDogs, setMaxDogs] = useState("1");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -105,6 +107,8 @@ const CreateListing = () => {
           price_per_night: parseFloat(price),
           max_dogs: parseInt(maxDogs) || 1,
           amenities: selectedAmenities,
+          latitude: coords?.lat ?? null,
+          longitude: coords?.lng ?? null,
         })
         .select("id")
         .single();
@@ -288,7 +292,19 @@ const CreateListing = () => {
               </div>
             </section>
 
-            {/* Amenities */}
+            {/* Map Location */}
+            <section className="mb-10">
+              <Label className="text-base font-semibold flex items-center gap-2 mb-4">
+                <MapPin className="w-5 h-5 text-primary" />
+                Pin your location
+              </Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin.
+              </p>
+              <LocationPicker value={coords} onChange={setCoords} city={city} />
+            </section>
+
+
             <section className="mb-10">
               <Label className="text-base font-semibold flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-primary" />
