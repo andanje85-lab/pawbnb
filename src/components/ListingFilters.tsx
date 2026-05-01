@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
-import { MapPin, SlidersHorizontal, Dog, DollarSign, X, Locate } from "lucide-react";
+import { MapPin, SlidersHorizontal, Dog, DollarSign, X, Locate, Ruler, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 const ALL_AMENITIES = [
   "Fenced Yard",
@@ -23,6 +28,12 @@ export interface FilterValues {
   priceRange: [number, number];
   maxDogs: number | null;
   amenities: string[];
+  /** Center used for distance filtering (geocoded from city or device location). */
+  center: { lat: number; lng: number } | null;
+  /** Radius in km. null disables distance filtering. */
+  radiusKm: number | null;
+  /** Availability window. null disables availability filtering. */
+  dateRange: { from: Date; to: Date } | null;
 }
 
 interface ListingFiltersProps {
@@ -36,23 +47,64 @@ const ListingFilters = ({ onFilterChange }: ListingFiltersProps) => {
   const [maxDogs, setMaxDogs] = useState<number | null>(null);
   const [amenities, setAmenities] = useState<string[]>([]);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const activeCount = [
     city.length > 0,
     priceRange[0] > 0 || priceRange[1] < 200,
     maxDogs !== null,
     amenities.length > 0,
+    radiusKm !== null && center !== null,
+    !!(dateRange?.from && dateRange?.to),
   ].filter(Boolean).length;
 
+  // Debounce-geocode the city when distance filter is enabled
   useEffect(() => {
-    onFilterChange({ city, priceRange, maxDogs, amenities });
-  }, [city, priceRange, maxDogs, amenities]);
+    if (radiusKm === null || !city.trim()) {
+      // If user cleared city, also clear center derived from city
+      if (!city.trim()) setCenter((c) => (c ? null : c));
+      return;
+    }
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(city)}`
+        );
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setCenter({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        }
+      } catch {
+        // ignore
+      }
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [city, radiusKm]);
+
+  useEffect(() => {
+    onFilterChange({
+      city,
+      priceRange,
+      maxDogs,
+      amenities,
+      center,
+      radiusKm,
+      dateRange:
+        dateRange?.from && dateRange?.to
+          ? { from: dateRange.from, to: dateRange.to }
+          : null,
+    });
+  }, [city, priceRange, maxDogs, amenities, center, radiusKm, dateRange]);
 
   const detectLocation = () => {
     if (!navigator.geolocation) return;
     setDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        // Always set center from device GPS — works even without typing a city
+        setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`
@@ -81,6 +133,9 @@ const ListingFilters = ({ onFilterChange }: ListingFiltersProps) => {
     setPriceRange([0, 200]);
     setMaxDogs(null);
     setAmenities([]);
+    setCenter(null);
+    setRadiusKm(null);
+    setDateRange(undefined);
   };
 
   const toggleAmenity = (a: string) => {
@@ -116,6 +171,46 @@ const ListingFilters = ({ onFilterChange }: ListingFiltersProps) => {
             <Locate className={`w-4 h-4 ${detectingLocation ? "animate-pulse" : ""}`} />
           </button>
         </div>
+
+        {/* Availability date range */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "rounded-xl gap-2 justify-start font-normal",
+                !dateRange?.from && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="w-4 h-4" />
+              {dateRange?.from && dateRange?.to ? (
+                <span className="text-sm">
+                  {format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}
+                </span>
+              ) : (
+                <span className="text-sm">Available dates</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              selected={dateRange}
+              onSelect={setDateRange}
+              numberOfMonths={1}
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+            {dateRange?.from && (
+              <div className="p-2 border-t border-border flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => setDateRange(undefined)}>
+                  Clear dates
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
 
         {/* Toggle filters */}
         <Button
@@ -156,6 +251,44 @@ const ListingFilters = ({ onFilterChange }: ListingFiltersProps) => {
             className="overflow-hidden"
           >
             <div className="px-4 pb-5 pt-1 space-y-5 border-t border-border">
+              {/* Distance */}
+              <div>
+                <label className="flex items-center justify-between text-sm font-medium text-foreground mb-3">
+                  <span className="flex items-center gap-2">
+                    <Ruler className="w-4 h-4 text-muted-foreground" />
+                    Distance from {city ? `"${city}"` : "search point"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {radiusKm === null ? "Off" : `Within ${radiusKm} km`}
+                  </span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    min={1}
+                    max={200}
+                    step={1}
+                    value={[radiusKm ?? 50]}
+                    onValueChange={(v) => setRadiusKm(v[0])}
+                    className="flex-1"
+                  />
+                  {radiusKm !== null && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRadiusKm(null)}
+                      className="text-muted-foreground"
+                    >
+                      Off
+                    </Button>
+                  )}
+                </div>
+                {radiusKm !== null && !center && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Enter a city or use your location to apply distance.
+                  </p>
+                )}
+              </div>
+
               {/* Price range */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-3">
