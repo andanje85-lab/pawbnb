@@ -27,12 +27,29 @@ const fallbackListings = [
   { id: "english-garden-cottage", image: listing6, title: "English Garden Cottage", location: "Denver, CO", rating: 4.9, reviews: 198, price: 42, verified: true, tags: ["Garden", "Small Dogs"], maxDogs: 1, amenities: ["Garden"] },
 ];
 
+// Haversine distance in km
+const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+
 const Index = () => {
   const [filters, setFilters] = useState<FilterValues>({
     city: "",
     priceRange: [0, 200],
     maxDogs: null,
     amenities: [],
+    center: null,
+    radiusKm: null,
+    dateRange: null,
   });
 
   const { data: dbListings, isLoading } = useQuery({
@@ -40,11 +57,34 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id, title, city, price_per_night, amenities, max_dogs, is_active, listing_photos(url, sort_order)")
+        .select("id, title, city, price_per_night, amenities, max_dogs, latitude, longitude, is_active, listing_photos(url, sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch bookings overlapping the requested date range to exclude unavailable listings
+  const { data: conflictingListingIds } = useQuery({
+    queryKey: [
+      "booking-conflicts",
+      filters.dateRange?.from?.toISOString(),
+      filters.dateRange?.to?.toISOString(),
+    ],
+    enabled: !!(filters.dateRange?.from && filters.dateRange?.to),
+    queryFn: async () => {
+      const from = filters.dateRange!.from.toISOString().split("T")[0];
+      const to = filters.dateRange!.to.toISOString().split("T")[0];
+      // A booking conflicts when it overlaps the window: check_in < to AND check_out > from
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("listing_id, check_in, check_out, status")
+        .in("status", ["pending", "confirmed"])
+        .lt("check_in", to)
+        .gt("check_out", from);
+      if (error) throw error;
+      return new Set((data || []).map((b) => b.listing_id));
     },
   });
 
@@ -66,10 +106,12 @@ const Index = () => {
           tags: (l.amenities || []).slice(0, 2),
           maxDogs: l.max_dogs,
           amenities: l.amenities || [],
+          latitude: (l as any).latitude as number | null,
+          longitude: (l as any).longitude as number | null,
         };
       });
     }
-    return fallbackListings;
+    return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null }));
   }, [dbListings, hasDbListings]);
 
   const filteredListings = useMemo(() => {
@@ -94,9 +136,23 @@ const Index = () => {
         );
         if (!allMatch) return false;
       }
+      // Distance filter — only applied when both center and radius are set;
+      // listings missing coordinates are excluded.
+      if (filters.center && filters.radiusKm !== null) {
+        if (listing.latitude == null || listing.longitude == null) return false;
+        const d = distanceKm(filters.center, {
+          lat: listing.latitude,
+          lng: listing.longitude,
+        });
+        if (d > filters.radiusKm) return false;
+      }
+      // Availability filter — exclude listings with overlapping bookings
+      if (filters.dateRange && conflictingListingIds?.has(listing.id)) {
+        return false;
+      }
       return true;
     });
-  }, [allListings, filters]);
+  }, [allListings, filters, conflictingListingIds]);
 
   return (
     <div className="min-h-screen bg-background">
