@@ -409,6 +409,18 @@ const ListingDetail = () => {
                 </div>
               </div>
 
+              {/* Location Map */}
+              {listing.latitude != null && listing.longitude != null && (
+                <div className="mt-10">
+                  <h2 className="font-serif text-xl font-bold text-foreground mb-2">Where you'll be</h2>
+                  <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {listing.location}
+                  </p>
+                  <LocationMap lat={listing.latitude} lng={listing.longitude} />
+                </div>
+              )}
+
               {/* Reviews */}
               {isUuid && id && <ReviewsList listingId={id} />}
             </div>
