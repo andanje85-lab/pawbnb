@@ -65,6 +65,7 @@ const Index = () => {
     dateRange: null,
   });
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
