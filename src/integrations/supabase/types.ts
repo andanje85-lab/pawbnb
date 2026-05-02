@@ -355,6 +355,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_exact_location: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
+      get_listing_address: { Args: { _listing_id: string }; Returns: string }
       get_my_role: { Args: never; Returns: string }
       has_role: {
         Args: {
