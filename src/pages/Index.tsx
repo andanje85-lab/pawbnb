@@ -170,8 +170,18 @@ const Index = () => {
     });
   }, [allListings, filters, conflictingListingIds]);
 
+  const listingsWithDistance = useMemo(() => {
+    return filteredListings.map((l) => {
+      let d: number | null = null;
+      if (filters.center && l.latitude != null && l.longitude != null) {
+        d = distanceKm(filters.center, { lat: l.latitude, lng: l.longitude });
+      }
+      return { ...l, distanceKm: d };
+    });
+  }, [filteredListings, filters.center]);
+
   const sortedListings = useMemo(() => {
-    const list = [...filteredListings];
+    const list = [...listingsWithDistance];
     switch (sortBy) {
       case "price_asc":
         return list.sort((a, b) => a.price - b.price);
@@ -179,6 +189,12 @@ const Index = () => {
         return list.sort((a, b) => b.price - a.price);
       case "rating_desc":
         return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "distance":
+        return list.sort((a, b) => {
+          const da = a.distanceKm ?? Number.POSITIVE_INFINITY;
+          const db = b.distanceKm ?? Number.POSITIVE_INFINITY;
+          return da - db;
+        });
       case "newest":
       default:
         return list.sort((a, b) => {
@@ -187,7 +203,7 @@ const Index = () => {
           return tb - ta;
         });
     }
-  }, [filteredListings, sortBy]);
+  }, [listingsWithDistance, sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
