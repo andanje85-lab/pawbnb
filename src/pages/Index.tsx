@@ -10,6 +10,16 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowUpDown } from "lucide-react";
+
+type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -51,13 +61,14 @@ const Index = () => {
     radiusKm: null,
     dateRange: null,
   });
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id, title, city, price_per_night, amenities, max_dogs, latitude, longitude, is_active, listing_photos(url, sort_order)")
+        .select("id, title, city, price_per_night, amenities, max_dogs, latitude, longitude, is_active, created_at, listing_photos(url, sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -108,10 +119,11 @@ const Index = () => {
           amenities: l.amenities || [],
           latitude: (l as any).latitude as number | null,
           longitude: (l as any).longitude as number | null,
+          createdAt: (l as any).created_at as string | null,
         };
       });
     }
-    return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null }));
+    return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null, createdAt: null }));
   }, [dbListings, hasDbListings]);
 
   const filteredListings = useMemo(() => {
@@ -154,6 +166,25 @@ const Index = () => {
     });
   }, [allListings, filters, conflictingListingIds]);
 
+  const sortedListings = useMemo(() => {
+    const list = [...filteredListings];
+    switch (sortBy) {
+      case "price_asc":
+        return list.sort((a, b) => a.price - b.price);
+      case "price_desc":
+        return list.sort((a, b) => b.price - a.price);
+      case "rating_desc":
+        return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "newest":
+      default:
+        return list.sort((a, b) => {
+          const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return tb - ta;
+        });
+    }
+  }, [filteredListings, sortBy]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -176,8 +207,29 @@ const Index = () => {
           </motion.div>
 
           {/* Filters */}
-          <div className="mb-8">
+          <div className="mb-6">
             <ListingFilters onFilterChange={setFilters} />
+          </div>
+
+          {/* Sort + result count */}
+          <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? "Loading…" : `${sortedListings.length} ${sortedListings.length === 1 ? "stay" : "stays"}`}
+            </p>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-[200px] rounded-xl">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest availability</SelectItem>
+                  <SelectItem value="price_asc">Price: low to high</SelectItem>
+                  <SelectItem value="price_desc">Price: high to low</SelectItem>
+                  <SelectItem value="rating_desc">Top rated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {isLoading ? (
@@ -190,7 +242,7 @@ const Index = () => {
                 </div>
               ))}
             </div>
-          ) : filteredListings.length === 0 ? (
+          ) : sortedListings.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -201,7 +253,7 @@ const Index = () => {
             </motion.div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredListings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <ListingCard key={listing.id} {...listing} />
               ))}
             </div>
