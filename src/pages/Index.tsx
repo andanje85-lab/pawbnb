@@ -17,9 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, LayoutGrid, Map as MapIcon } from "lucide-react";
+import ListingsMap from "@/components/ListingsMap";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc";
+type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc" | "distance";
+type ViewMode = "list" | "map";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
