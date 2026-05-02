@@ -10,6 +10,16 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowUpDown } from "lucide-react";
+
+type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -57,7 +67,7 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id, title, city, price_per_night, amenities, max_dogs, latitude, longitude, is_active, listing_photos(url, sort_order)")
+        .select("id, title, city, price_per_night, amenities, max_dogs, latitude, longitude, is_active, created_at, listing_photos(url, sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -108,10 +118,11 @@ const Index = () => {
           amenities: l.amenities || [],
           latitude: (l as any).latitude as number | null,
           longitude: (l as any).longitude as number | null,
+          createdAt: (l as any).created_at as string | null,
         };
       });
     }
-    return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null }));
+    return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null, createdAt: null }));
   }, [dbListings, hasDbListings]);
 
   const filteredListings = useMemo(() => {
