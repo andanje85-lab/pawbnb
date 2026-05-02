@@ -231,24 +231,45 @@ const Index = () => {
             <ListingFilters onFilterChange={setFilters} />
           </div>
 
-          {/* Sort + result count */}
+          {/* Sort + view toggle + result count */}
           <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">
               {isLoading ? "Loading…" : `${sortedListings.length} ${sortedListings.length === 1 ? "stay" : "stays"}`}
             </p>
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[200px] rounded-xl">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest availability</SelectItem>
-                  <SelectItem value="price_asc">Price: low to high</SelectItem>
-                  <SelectItem value="price_desc">Price: high to low</SelectItem>
-                  <SelectItem value="rating_desc">Top rated</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2 flex-wrap">
+              <ToggleGroup
+                type="single"
+                value={viewMode}
+                onValueChange={(v) => v && setViewMode(v as ViewMode)}
+                className="rounded-xl border border-border bg-card p-0.5"
+              >
+                <ToggleGroupItem value="list" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="text-xs">List</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="map" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                  <MapIcon className="w-4 h-4" />
+                  <span className="text-xs">Map</span>
+                </ToggleGroupItem>
+              </ToggleGroup>
+
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                  <SelectTrigger className="w-[200px] rounded-xl">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest availability</SelectItem>
+                    <SelectItem value="price_asc">Price: low to high</SelectItem>
+                    <SelectItem value="price_desc">Price: high to low</SelectItem>
+                    <SelectItem value="rating_desc">Top rated</SelectItem>
+                    <SelectItem value="distance" disabled={!filters.center}>
+                      Distance{!filters.center ? " (set location)" : ""}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -271,10 +292,29 @@ const Index = () => {
               <p className="text-lg font-medium text-foreground mb-2">No listings match your filters</p>
               <p className="text-muted-foreground text-sm">Try adjusting your search criteria or clearing filters.</p>
             </motion.div>
+          ) : viewMode === "map" ? (
+            <ListingsMap
+              listings={sortedListings
+                .filter((l) => l.latitude != null && l.longitude != null)
+                .map((l) => ({
+                  id: l.id,
+                  title: l.title,
+                  image: l.image,
+                  price: l.price,
+                  location: l.location,
+                  latitude: l.latitude as number,
+                  longitude: l.longitude as number,
+                }))}
+              center={filters.center}
+            />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
-                <ListingCard key={listing.id} {...listing} />
+                <ListingCard
+                  key={listing.id}
+                  {...listing}
+                  distanceKm={listing.distanceKm}
+                />
               ))}
             </div>
           )}
