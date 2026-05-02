@@ -17,9 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, LayoutGrid, Map as MapIcon } from "lucide-react";
+import ListingsMap from "@/components/ListingsMap";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc";
+type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc" | "distance";
+type ViewMode = "list" | "map";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -62,6 +65,7 @@ const Index = () => {
     dateRange: null,
   });
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
@@ -166,8 +170,18 @@ const Index = () => {
     });
   }, [allListings, filters, conflictingListingIds]);
 
+  const listingsWithDistance = useMemo(() => {
+    return filteredListings.map((l) => {
+      let d: number | null = null;
+      if (filters.center && l.latitude != null && l.longitude != null) {
+        d = distanceKm(filters.center, { lat: l.latitude, lng: l.longitude });
+      }
+      return { ...l, distanceKm: d };
+    });
+  }, [filteredListings, filters.center]);
+
   const sortedListings = useMemo(() => {
-    const list = [...filteredListings];
+    const list = [...listingsWithDistance];
     switch (sortBy) {
       case "price_asc":
         return list.sort((a, b) => a.price - b.price);
@@ -175,6 +189,12 @@ const Index = () => {
         return list.sort((a, b) => b.price - a.price);
       case "rating_desc":
         return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "distance":
+        return list.sort((a, b) => {
+          const da = a.distanceKm ?? Number.POSITIVE_INFINITY;
+          const db = b.distanceKm ?? Number.POSITIVE_INFINITY;
+          return da - db;
+        });
       case "newest":
       default:
         return list.sort((a, b) => {
@@ -183,7 +203,7 @@ const Index = () => {
           return tb - ta;
         });
     }
-  }, [filteredListings, sortBy]);
+  }, [listingsWithDistance, sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,24 +231,45 @@ const Index = () => {
             <ListingFilters onFilterChange={setFilters} />
           </div>
 
-          {/* Sort + result count */}
+          {/* Sort + view toggle + result count */}
           <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">
               {isLoading ? "Loading…" : `${sortedListings.length} ${sortedListings.length === 1 ? "stay" : "stays"}`}
             </p>
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[200px] rounded-xl">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest availability</SelectItem>
-                  <SelectItem value="price_asc">Price: low to high</SelectItem>
-                  <SelectItem value="price_desc">Price: high to low</SelectItem>
-                  <SelectItem value="rating_desc">Top rated</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-2 flex-wrap">
+              <ToggleGroup
+                type="single"
+                value={viewMode}
+                onValueChange={(v) => v && setViewMode(v as ViewMode)}
+                className="rounded-xl border border-border bg-card p-0.5"
+              >
+                <ToggleGroupItem value="list" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="text-xs">List</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="map" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                  <MapIcon className="w-4 h-4" />
+                  <span className="text-xs">Map</span>
+                </ToggleGroupItem>
+              </ToggleGroup>
+
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                  <SelectTrigger className="w-[200px] rounded-xl">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest availability</SelectItem>
+                    <SelectItem value="price_asc">Price: low to high</SelectItem>
+                    <SelectItem value="price_desc">Price: high to low</SelectItem>
+                    <SelectItem value="rating_desc">Top rated</SelectItem>
+                    <SelectItem value="distance" disabled={!filters.center}>
+                      Distance{!filters.center ? " (set location)" : ""}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -251,10 +292,29 @@ const Index = () => {
               <p className="text-lg font-medium text-foreground mb-2">No listings match your filters</p>
               <p className="text-muted-foreground text-sm">Try adjusting your search criteria or clearing filters.</p>
             </motion.div>
+          ) : viewMode === "map" ? (
+            <ListingsMap
+              listings={sortedListings
+                .filter((l) => l.latitude != null && l.longitude != null)
+                .map((l) => ({
+                  id: l.id,
+                  title: l.title,
+                  image: l.image,
+                  price: l.price,
+                  location: l.location,
+                  latitude: l.latitude as number,
+                  longitude: l.longitude as number,
+                }))}
+              center={filters.center}
+            />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
-                <ListingCard key={listing.id} {...listing} />
+                <ListingCard
+                  key={listing.id}
+                  {...listing}
+                  distanceKm={listing.distanceKm}
+                />
               ))}
             </div>
           )}

@@ -13,9 +13,11 @@ interface ListingCardProps {
   price: number;
   verified: boolean;
   tags: string[];
+  /** Distance from search center in km. Shown as a small badge when provided. */
+  distanceKm?: number | null;
 }
 
-const ListingCard = ({ id, image, title, location, rating, reviews, price, verified, tags }: ListingCardProps) => {
+const ListingCard = ({ id, image, title, location, rating, reviews, price, verified, tags, distanceKm }: ListingCardProps) => {
   const [liked, setLiked] = useState(false);
 
   return (
@@ -62,6 +64,11 @@ const ListingCard = ({ id, image, title, location, rating, reviews, price, verif
         <div className="flex items-center gap-1 text-muted-foreground">
           <MapPin className="w-3 h-3" />
           <span className="text-xs">{location}</span>
+          {distanceKm != null && (
+            <span className="ml-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+              {distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`} away
+            </span>
+          )}
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {tags.map((tag) => (
