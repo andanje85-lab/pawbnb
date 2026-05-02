@@ -242,7 +242,7 @@ const Index = () => {
                 </div>
               ))}
             </div>
-          ) : filteredListings.length === 0 ? (
+          ) : sortedListings.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -253,7 +253,7 @@ const Index = () => {
             </motion.div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredListings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <ListingCard key={listing.id} {...listing} />
               ))}
             </div>
