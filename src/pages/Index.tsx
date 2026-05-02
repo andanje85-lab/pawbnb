@@ -61,6 +61,7 @@ const Index = () => {
     radiusKm: null,
     dateRange: null,
   });
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
@@ -165,6 +166,25 @@ const Index = () => {
     });
   }, [allListings, filters, conflictingListingIds]);
 
+  const sortedListings = useMemo(() => {
+    const list = [...filteredListings];
+    switch (sortBy) {
+      case "price_asc":
+        return list.sort((a, b) => a.price - b.price);
+      case "price_desc":
+        return list.sort((a, b) => b.price - a.price);
+      case "rating_desc":
+        return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      case "newest":
+      default:
+        return list.sort((a, b) => {
+          const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return tb - ta;
+        });
+    }
+  }, [filteredListings, sortBy]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -187,8 +207,29 @@ const Index = () => {
           </motion.div>
 
           {/* Filters */}
-          <div className="mb-8">
+          <div className="mb-6">
             <ListingFilters onFilterChange={setFilters} />
+          </div>
+
+          {/* Sort + result count */}
+          <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? "Loading…" : `${sortedListings.length} ${sortedListings.length === 1 ? "stay" : "stays"}`}
+            </p>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="w-[200px] rounded-xl">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest availability</SelectItem>
+                  <SelectItem value="price_asc">Price: low to high</SelectItem>
+                  <SelectItem value="price_desc">Price: high to low</SelectItem>
+                  <SelectItem value="rating_desc">Top rated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {isLoading ? (
