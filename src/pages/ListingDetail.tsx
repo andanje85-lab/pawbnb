@@ -127,6 +127,27 @@ const ListingDetail = () => {
     enabled: isUuid,
   });
 
+  // Privacy: only host, staff, or guests with confirmed bookings can see the exact pin/address.
+  const { data: canViewExact } = useQuery({
+    queryKey: ["can-view-exact-location", id, user?.id],
+    enabled: isUuid && !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("can_view_exact_location", { _listing_id: id! });
+      if (error) throw error;
+      return !!data;
+    },
+  });
+
+  const { data: exactAddress } = useQuery({
+    queryKey: ["listing-address", id, user?.id],
+    enabled: isUuid && !!id && !!canViewExact,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_listing_address", { _listing_id: id! });
+      if (error) throw error;
+      return (data as string) || null;
+    },
+  });
+
   // Resolve listing data: DB or mock
   const mock = !isUuid && id ? mockListings[id] : null;
 
@@ -415,9 +436,18 @@ const ListingDetail = () => {
                   <h2 className="font-serif text-xl font-bold text-foreground mb-2">Where you'll be</h2>
                   <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {listing.location}
+                    {canViewExact && exactAddress ? exactAddress : `${listing.location} · approximate area`}
                   </p>
-                  <LocationMap lat={listing.latitude} lng={listing.longitude} />
+                  <LocationMap
+                    lat={listing.latitude}
+                    lng={listing.longitude}
+                    approximate={!canViewExact}
+                  />
+                  {!canViewExact && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      For host privacy, the exact address is shared after your booking is confirmed.
+                    </p>
+                  )}
                 </div>
               )}
 
