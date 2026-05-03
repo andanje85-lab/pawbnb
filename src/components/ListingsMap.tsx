@@ -1,7 +1,5 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -30,25 +28,11 @@ interface ListingsMapProps {
   center?: { lat: number; lng: number } | null;
 }
 
-const FitBounds = ({
-  points,
-}: {
-  points: [number, number][];
-}) => {
-  const map = useMap();
-  useEffect(() => {
-    if (points.length === 0) return;
-    if (points.length === 1) {
-      map.setView(points[0], 12);
-      return;
-    }
-    const bounds = L.latLngBounds(points);
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
-  }, [points, map]);
-  return null;
-};
-
 const ListingsMap = ({ listings, height = 480, center }: ListingsMapProps) => {
+  const mapNodeRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerLayerRef = useRef<L.LayerGroup | null>(null);
+
   const points = useMemo(
     () =>
       listings
@@ -61,45 +45,77 @@ const ListingsMap = ({ listings, height = 480, center }: ListingsMapProps) => {
   const initialCenter: [number, number] =
     center ? [center.lat, center.lng] : points[0] ?? [39.8, -98.5];
 
+  useEffect(() => {
+    if (!mapNodeRef.current || mapRef.current) return;
+
+    const map = L.map(mapNodeRef.current, { scrollWheelZoom: true }).setView(initialCenter, 4);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+    markerLayerRef.current = L.layerGroup().addTo(map);
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerLayerRef.current = null;
+    };
+    // Initialize once; listing changes are handled below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const markerLayer = markerLayerRef.current;
+    if (!map || !markerLayer) return;
+
+    markerLayer.clearLayers();
+    listings
+      .filter((l) => l.latitude != null && l.longitude != null)
+      .forEach((listing) => {
+        const popup = document.createElement("a");
+        popup.href = `/listing/${listing.id}`;
+        popup.className = "block w-44";
+
+        const image = document.createElement("img");
+        image.src = listing.image;
+        image.alt = listing.title;
+        image.className = "w-full h-24 object-cover rounded-md mb-2";
+        popup.appendChild(image);
+
+        const title = document.createElement("p");
+        title.className = "text-sm font-semibold leading-tight mb-1";
+        title.textContent = listing.title;
+        popup.appendChild(title);
+
+        const location = document.createElement("p");
+        location.className = "text-xs text-muted-foreground mb-1";
+        location.textContent = listing.location;
+        popup.appendChild(location);
+
+        const price = document.createElement("p");
+        price.className = "text-sm";
+        price.textContent = `$${listing.price} / night`;
+        popup.appendChild(price);
+
+        L.marker([listing.latitude, listing.longitude], { icon: markerIcon }).bindPopup(popup).addTo(markerLayer);
+      });
+
+    if (points.length === 0) {
+      map.setView(initialCenter, 4);
+    } else if (points.length === 1) {
+      map.setView(points[0], 12);
+    } else {
+      map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 13 });
+    }
+  }, [initialCenter, listings, points]);
+
   return (
     <div
+      ref={mapNodeRef}
       className="rounded-2xl overflow-hidden border border-border"
       style={{ height }}
-    >
-      <MapContainer
-        center={initialCenter}
-        zoom={4}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
-        />
-        <FitBounds points={points} />
-        {listings
-          .filter((l) => l.latitude != null && l.longitude != null)
-          .map((l) => (
-            <Marker key={l.id} position={[l.latitude, l.longitude]} icon={markerIcon}>
-              <Popup>
-                <Link to={`/listing/${l.id}`} className="block w-44">
-                  <img
-                    src={l.image}
-                    alt={l.title}
-                    className="w-full h-24 object-cover rounded-md mb-2"
-                  />
-                  <p className="text-sm font-semibold leading-tight mb-1">{l.title}</p>
-                  <p className="text-xs text-muted-foreground mb-1">{l.location}</p>
-                  <p className="text-sm">
-                    <span className="font-semibold">${l.price}</span>
-                    <span className="text-muted-foreground"> / night</span>
-                  </p>
-                </Link>
-              </Popup>
-            </Marker>
-          ))}
-      </MapContainer>
-    </div>
+    />
   );
 };
 
