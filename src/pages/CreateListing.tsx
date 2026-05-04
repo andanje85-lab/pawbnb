@@ -33,6 +33,7 @@ const CreateListing = () => {
   const [maxDogs, setMaxDogs] = useState("1");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>("moderate");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
