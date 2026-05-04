@@ -18,6 +18,7 @@ import type { DateRange } from "react-day-picker";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
+import { getPolicy } from "@/lib/cancellationPolicy";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -171,11 +172,12 @@ const ListingDetail = () => {
         maxDogs: dbListing.max_dogs,
         latitude: (dbListing as any).latitude as number | null,
         longitude: (dbListing as any).longitude as number | null,
+        cancellationPolicy: (dbListing as any).cancellation_policy as string | null,
         isDb: true,
       };
     }
     if (mock) {
-      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null };
+      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate" };
     }
     return null;
   }, [isUuid, dbListing, mock, id, reviewStats]);
@@ -473,47 +475,60 @@ const ListingDetail = () => {
                     <CalendarIcon className="w-4 h-4" />
                     Select dates
                   </Label>
-                  <Calendar
-                    mode="range"
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    disabled={{ before: new Date() }}
-                    numberOfMonths={1}
-                    modifiers={dateRange?.from ? {
-                      freeCancelEnd: subDays(dateRange.from, 7),
-                      partialRefundEnd: subDays(dateRange.from, 3),
-                    } : undefined}
-                    modifiersClassNames={{
-                      freeCancelEnd: "ring-2 ring-emerald-500 ring-offset-1 rounded-md",
-                      partialRefundEnd: "ring-2 ring-amber-500 ring-offset-1 rounded-md",
-                    }}
-                    className="rounded-xl border border-border p-0 [&_.rdp-months]:p-3"
-                  />
-                  {dateRange?.from && (() => {
-                    const freeEnd = subDays(dateRange.from, 7);
-                    const partialEnd = subDays(dateRange.from, 3);
-                    const today = new Date();
+                  {(() => {
+                    const policy = getPolicy(listing.cancellationPolicy);
+                    const hasPartial = policy.partialDays > 0 && policy.partialPct > 0;
                     return (
-                      <div className="mt-3 space-y-1.5 text-xs">
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                          <span className={isAfter(today, freeEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
-                            Free cancellation until <strong>{format(freeEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-                          <span className={isAfter(today, partialEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
-                            50% refund until <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
-                          <span className="text-muted-foreground">
-                            Non-refundable after <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                      </div>
+                      <>
+                        <Calendar
+                          mode="range"
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          disabled={{ before: new Date() }}
+                          numberOfMonths={1}
+                          modifiers={dateRange?.from ? {
+                            freeCancelEnd: subDays(dateRange.from, policy.freeDays),
+                            ...(hasPartial ? { partialRefundEnd: subDays(dateRange.from, policy.partialDays) } : {}),
+                          } : undefined}
+                          modifiersClassNames={{
+                            freeCancelEnd: "ring-2 ring-emerald-500 ring-offset-1 rounded-md",
+                            partialRefundEnd: "ring-2 ring-amber-500 ring-offset-1 rounded-md",
+                          }}
+                          className="rounded-xl border border-border p-0 [&_.rdp-months]:p-3"
+                        />
+                        {dateRange?.from && (() => {
+                          const freeEnd = subDays(dateRange.from, policy.freeDays);
+                          const partialEnd = hasPartial ? subDays(dateRange.from, policy.partialDays) : freeEnd;
+                          const today = new Date();
+                          return (
+                            <div className="mt-3 space-y-1.5 text-xs">
+                              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                                {policy.label} policy
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                <span className={isAfter(today, freeEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                                  Free cancellation until <strong>{format(freeEnd, "MMM d, yyyy")}</strong>
+                                </span>
+                              </div>
+                              {hasPartial && (
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                                  <span className={isAfter(today, partialEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                                    {policy.partialPct}% refund until <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex items-start gap-2">
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                                <span className="text-muted-foreground">
+                                  Non-refundable after <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
                     );
                   })()}
                 </div>
@@ -569,34 +584,42 @@ const ListingDetail = () => {
                   {!user ? "Sign in to book" : nights === 0 ? "Select dates" : `Request to Book · $${totalPrice}`}
                 </Button>
 
-                <details className="mt-4 group rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                  <summary className="flex cursor-pointer items-center justify-between font-medium text-foreground">
-                    <span className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      Cancellation & Refund Policy
-                    </span>
-                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
-                  </summary>
-                  <div className="mt-3 space-y-3 text-muted-foreground">
-                    <div>
-                      <p className="font-medium text-foreground">Free cancellation</p>
-                      <p>Cancel up to <strong>7 days before check-in</strong> for a full refund.</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Partial refund</p>
-                      <p>Cancel between <strong>3 and 7 days before check-in</strong> for a 50% refund.</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">No refund</p>
-                      <p>Cancellations within <strong>72 hours</strong> of check-in or no-shows are non-refundable.</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Host cancellations</p>
-                      <p>If the host cancels, you'll receive a <strong>full refund</strong> and help finding another stay.</p>
-                    </div>
-                    <p className="pt-1 text-xs">Refunds are processed within 5–10 business days to your original payment method.</p>
-                  </div>
-                </details>
+                {(() => {
+                  const policy = getPolicy(listing.cancellationPolicy);
+                  const hasPartial = policy.partialDays > 0 && policy.partialPct > 0;
+                  return (
+                    <details className="mt-4 group rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                      <summary className="flex cursor-pointer items-center justify-between font-medium text-foreground">
+                        <span className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          {policy.label} cancellation
+                        </span>
+                        <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                      </summary>
+                      <div className="mt-3 space-y-3 text-muted-foreground">
+                        <div>
+                          <p className="font-medium text-foreground">Free cancellation</p>
+                          <p>Cancel up to <strong>{policy.freeDays} day{policy.freeDays === 1 ? "" : "s"} before check-in</strong> for a full refund.</p>
+                        </div>
+                        {hasPartial && (
+                          <div>
+                            <p className="font-medium text-foreground">Partial refund</p>
+                            <p>Cancel between <strong>{policy.partialDays} and {policy.freeDays} days before check-in</strong> for a {policy.partialPct}% refund.</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-foreground">No refund</p>
+                          <p>Cancellations within <strong>{hasPartial ? policy.partialDays : policy.freeDays} day{(hasPartial ? policy.partialDays : policy.freeDays) === 1 ? "" : "s"}</strong> of check-in or no-shows are non-refundable.</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Host cancellations</p>
+                          <p>If the host cancels, you'll receive a <strong>full refund</strong> and help finding another stay.</p>
+                        </div>
+                        <p className="pt-1 text-xs">Refunds are processed within 5–10 business days to your original payment method.</p>
+                      </div>
+                    </details>
+                  );
+                })()}
               </motion.div>
             </div>
           </div>

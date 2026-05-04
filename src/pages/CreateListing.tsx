@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { POLICY_PRESETS, type CancellationPolicy } from "@/lib/cancellationPolicy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +33,7 @@ const CreateListing = () => {
   const [maxDogs, setMaxDogs] = useState("1");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>("moderate");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -109,6 +111,7 @@ const CreateListing = () => {
           amenities: selectedAmenities,
           latitude: coords?.lat ?? null,
           longitude: coords?.lng ?? null,
+          cancellation_policy: cancellationPolicy,
         })
         .select("id")
         .single();
@@ -324,6 +327,36 @@ const CreateListing = () => {
                       }`}
                     >
                       {amenity}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="mb-10">
+              <Label className="text-base font-semibold flex items-center gap-2 mb-4">
+                <Shield className="w-5 h-5 text-primary" />
+                Cancellation Policy
+              </Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose how flexible you are with cancellations. Guests will see the exact deadlines on the calendar.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {Object.values(POLICY_PRESETS).map((preset) => {
+                  const selected = cancellationPolicy === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setCancellationPolicy(preset.id)}
+                      className={`text-left rounded-xl border p-4 transition-colors ${
+                        selected
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/30"
+                          : "border-border bg-card hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className="font-semibold text-foreground mb-1">{preset.label}</div>
+                      <div className="text-xs text-muted-foreground">{preset.tagline}</div>
                     </button>
                   );
                 })}
