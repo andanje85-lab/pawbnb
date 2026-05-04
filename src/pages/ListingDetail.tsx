@@ -18,6 +18,7 @@ import type { DateRange } from "react-day-picker";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
+import { getPolicy } from "@/lib/cancellationPolicy";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
