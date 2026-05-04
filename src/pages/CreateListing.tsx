@@ -111,6 +111,7 @@ const CreateListing = () => {
           amenities: selectedAmenities,
           latitude: coords?.lat ?? null,
           longitude: coords?.lng ?? null,
+          cancellation_policy: cancellationPolicy,
         })
         .select("id")
         .single();
