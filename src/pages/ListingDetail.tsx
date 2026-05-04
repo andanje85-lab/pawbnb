@@ -177,7 +177,7 @@ const ListingDetail = () => {
       };
     }
     if (mock) {
-      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null };
+      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate" };
     }
     return null;
   }, [isUuid, dbListing, mock, id, reviewStats]);
