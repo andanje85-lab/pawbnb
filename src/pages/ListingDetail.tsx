@@ -533,6 +533,35 @@ const ListingDetail = () => {
                 >
                   {!user ? "Sign in to book" : nights === 0 ? "Select dates" : `Request to Book · $${totalPrice}`}
                 </Button>
+
+                <details className="mt-4 group rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                  <summary className="flex cursor-pointer items-center justify-between font-medium text-foreground">
+                    <span className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-primary" />
+                      Cancellation & Refund Policy
+                    </span>
+                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                  </summary>
+                  <div className="mt-3 space-y-3 text-muted-foreground">
+                    <div>
+                      <p className="font-medium text-foreground">Free cancellation</p>
+                      <p>Cancel up to <strong>7 days before check-in</strong> for a full refund.</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Partial refund</p>
+                      <p>Cancel between <strong>3 and 7 days before check-in</strong> for a 50% refund.</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">No refund</p>
+                      <p>Cancellations within <strong>72 hours</strong> of check-in or no-shows are non-refundable.</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Host cancellations</p>
+                      <p>If the host cancels, you'll receive a <strong>full refund</strong> and help finding another stay.</p>
+                    </div>
+                    <p className="pt-1 text-xs">Refunds are processed within 5–10 business days to your original payment method.</p>
+                  </div>
+                </details>
               </motion.div>
             </div>
           </div>
