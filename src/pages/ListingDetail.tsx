@@ -475,47 +475,60 @@ const ListingDetail = () => {
                     <CalendarIcon className="w-4 h-4" />
                     Select dates
                   </Label>
-                  <Calendar
-                    mode="range"
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    disabled={{ before: new Date() }}
-                    numberOfMonths={1}
-                    modifiers={dateRange?.from ? {
-                      freeCancelEnd: subDays(dateRange.from, 7),
-                      partialRefundEnd: subDays(dateRange.from, 3),
-                    } : undefined}
-                    modifiersClassNames={{
-                      freeCancelEnd: "ring-2 ring-emerald-500 ring-offset-1 rounded-md",
-                      partialRefundEnd: "ring-2 ring-amber-500 ring-offset-1 rounded-md",
-                    }}
-                    className="rounded-xl border border-border p-0 [&_.rdp-months]:p-3"
-                  />
-                  {dateRange?.from && (() => {
-                    const freeEnd = subDays(dateRange.from, 7);
-                    const partialEnd = subDays(dateRange.from, 3);
-                    const today = new Date();
+                  {(() => {
+                    const policy = getPolicy(listing.cancellationPolicy);
+                    const hasPartial = policy.partialDays > 0 && policy.partialPct > 0;
                     return (
-                      <div className="mt-3 space-y-1.5 text-xs">
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                          <span className={isAfter(today, freeEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
-                            Free cancellation until <strong>{format(freeEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-                          <span className={isAfter(today, partialEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
-                            50% refund until <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
-                          <span className="text-muted-foreground">
-                            Non-refundable after <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
-                          </span>
-                        </div>
-                      </div>
+                      <>
+                        <Calendar
+                          mode="range"
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          disabled={{ before: new Date() }}
+                          numberOfMonths={1}
+                          modifiers={dateRange?.from ? {
+                            freeCancelEnd: subDays(dateRange.from, policy.freeDays),
+                            ...(hasPartial ? { partialRefundEnd: subDays(dateRange.from, policy.partialDays) } : {}),
+                          } : undefined}
+                          modifiersClassNames={{
+                            freeCancelEnd: "ring-2 ring-emerald-500 ring-offset-1 rounded-md",
+                            partialRefundEnd: "ring-2 ring-amber-500 ring-offset-1 rounded-md",
+                          }}
+                          className="rounded-xl border border-border p-0 [&_.rdp-months]:p-3"
+                        />
+                        {dateRange?.from && (() => {
+                          const freeEnd = subDays(dateRange.from, policy.freeDays);
+                          const partialEnd = hasPartial ? subDays(dateRange.from, policy.partialDays) : freeEnd;
+                          const today = new Date();
+                          return (
+                            <div className="mt-3 space-y-1.5 text-xs">
+                              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                                {policy.label} policy
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                <span className={isAfter(today, freeEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                                  Free cancellation until <strong>{format(freeEnd, "MMM d, yyyy")}</strong>
+                                </span>
+                              </div>
+                              {hasPartial && (
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                                  <span className={isAfter(today, partialEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                                    {policy.partialPct}% refund until <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex items-start gap-2">
+                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                                <span className="text-muted-foreground">
+                                  Non-refundable after <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
                     );
                   })()}
                 </div>
