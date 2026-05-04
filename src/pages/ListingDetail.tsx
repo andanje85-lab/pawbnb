@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, subDays, format, isAfter } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -479,8 +479,43 @@ const ListingDetail = () => {
                     onSelect={setDateRange}
                     disabled={{ before: new Date() }}
                     numberOfMonths={1}
+                    modifiers={dateRange?.from ? {
+                      freeCancelEnd: subDays(dateRange.from, 7),
+                      partialRefundEnd: subDays(dateRange.from, 3),
+                    } : undefined}
+                    modifiersClassNames={{
+                      freeCancelEnd: "ring-2 ring-emerald-500 ring-offset-1 rounded-md",
+                      partialRefundEnd: "ring-2 ring-amber-500 ring-offset-1 rounded-md",
+                    }}
                     className="rounded-xl border border-border p-0 [&_.rdp-months]:p-3"
                   />
+                  {dateRange?.from && (() => {
+                    const freeEnd = subDays(dateRange.from, 7);
+                    const partialEnd = subDays(dateRange.from, 3);
+                    const today = new Date();
+                    return (
+                      <div className="mt-3 space-y-1.5 text-xs">
+                        <div className="flex items-start gap-2">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                          <span className={isAfter(today, freeEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                            Free cancellation until <strong>{format(freeEnd, "MMM d, yyyy")}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                          <span className={isAfter(today, partialEnd) ? "text-muted-foreground line-through" : "text-foreground"}>
+                            50% refund until <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                          <span className="text-muted-foreground">
+                            Non-refundable after <strong>{format(partialEnd, "MMM d, yyyy")}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="mb-4">
