@@ -333,6 +333,36 @@ const CreateListing = () => {
               </div>
             </section>
 
+            <section className="mb-10">
+              <Label className="text-base font-semibold flex items-center gap-2 mb-4">
+                <Shield className="w-5 h-5 text-primary" />
+                Cancellation Policy
+              </Label>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose how flexible you are with cancellations. Guests will see the exact deadlines on the calendar.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {Object.values(POLICY_PRESETS).map((preset) => {
+                  const selected = cancellationPolicy === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setCancellationPolicy(preset.id)}
+                      className={`text-left rounded-xl border p-4 transition-colors ${
+                        selected
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/30"
+                          : "border-border bg-card hover:bg-secondary/50"
+                      }`}
+                    >
+                      <div className="font-semibold text-foreground mb-1">{preset.label}</div>
+                      <div className="text-xs text-muted-foreground">{preset.tagline}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             {/* Submit */}
             <Button
               size="lg"
