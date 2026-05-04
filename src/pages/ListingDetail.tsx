@@ -172,6 +172,7 @@ const ListingDetail = () => {
         maxDogs: dbListing.max_dogs,
         latitude: (dbListing as any).latitude as number | null,
         longitude: (dbListing as any).longitude as number | null,
+        cancellationPolicy: (dbListing as any).cancellation_policy as string | null,
         isDb: true,
       };
     }
