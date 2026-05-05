@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+const reviewSchema = z.object({
+  rating: z.number().int().min(1, "Please select a rating").max(5),
+  comment: z.string().trim().max(1000, "Comment must be 1000 characters or fewer").optional(),
+});
 
 interface ReviewFormProps {
   bookingId: string;
