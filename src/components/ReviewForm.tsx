@@ -27,8 +27,9 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
   const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
-    if (rating === 0) {
-      toast.error("Please select a rating");
+    const parsed = reviewSchema.safeParse({ rating, comment: comment.trim() || undefined });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     setSubmitting(true);
@@ -37,13 +38,18 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
         booking_id: bookingId,
         listing_id: listingId,
         reviewer_id: reviewerId,
-        rating,
-        comment: comment.trim() || null,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment ?? null,
       });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") throw new Error("You've already reviewed this stay");
+        throw error;
+      }
       toast.success("Review submitted!");
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["listings-ratings"] });
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to submit review");
