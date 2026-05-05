@@ -130,13 +130,14 @@ const Index = () => {
     if (hasDbListings) {
       return dbListings.map((l) => {
         const photos = (l.listing_photos || []).sort((a, b) => a.sort_order - b.sort_order);
+        const stats = ratingsByListing?.[l.id];
         return {
           id: l.id,
           image: photos[0]?.url || listing1,
           title: l.title,
           location: l.city || "Unknown",
-          rating: 0,
-          reviews: 0,
+          rating: stats?.avg ?? 0,
+          reviews: stats?.count ?? 0,
           price: l.price_per_night,
           verified: true,
           tags: (l.amenities || []).slice(0, 2),
@@ -149,7 +150,7 @@ const Index = () => {
       });
     }
     return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null, createdAt: null }));
-  }, [dbListings, hasDbListings]);
+  }, [dbListings, hasDbListings, ratingsByListing]);
 
   const filteredListings = useMemo(() => {
     return allListings.filter((listing) => {
