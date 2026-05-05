@@ -80,6 +80,27 @@ const Index = () => {
     },
   });
 
+  // Fetch ratings for all listings (aggregated client-side)
+  const { data: ratingsByListing } = useQuery({
+    queryKey: ["listings-ratings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("reviews").select("listing_id, rating");
+      if (error) throw error;
+      const map = new Map<string, { sum: number; count: number }>();
+      (data || []).forEach((r) => {
+        const cur = map.get(r.listing_id) || { sum: 0, count: 0 };
+        cur.sum += r.rating;
+        cur.count += 1;
+        map.set(r.listing_id, cur);
+      });
+      const result: Record<string, { avg: number; count: number }> = {};
+      map.forEach((v, k) => {
+        result[k] = { avg: parseFloat((v.sum / v.count).toFixed(1)), count: v.count };
+      });
+      return result;
+    },
+  });
+
   // Fetch bookings overlapping the requested date range to exclude unavailable listings
   const { data: conflictingListingIds } = useQuery({
     queryKey: [
