@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ProfileSettings from "./pages/ProfileSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Messages from "./pages/Messages";
+import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
