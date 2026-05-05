@@ -81,12 +81,16 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
           </button>
         ))}
       </div>
-      <Textarea
-        placeholder="Tell others about your experience..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        rows={3}
-      />
+      <div className="space-y-1">
+        <Textarea
+          placeholder="Tell others about your experience..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value.slice(0, 1000))}
+          rows={3}
+          maxLength={1000}
+        />
+        <p className="text-xs text-muted-foreground text-right">{comment.length}/1000</p>
+      </div>
       <div className="flex gap-2">
         <Button size="sm" onClick={handleSubmit} disabled={submitting}>
           {submitting ? "Submitting..." : "Submit Review"}
