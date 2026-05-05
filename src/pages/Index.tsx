@@ -80,6 +80,27 @@ const Index = () => {
     },
   });
 
+  // Fetch ratings for all listings (aggregated client-side)
+  const { data: ratingsByListing } = useQuery({
+    queryKey: ["listings-ratings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("reviews").select("listing_id, rating");
+      if (error) throw error;
+      const map = new Map<string, { sum: number; count: number }>();
+      (data || []).forEach((r) => {
+        const cur = map.get(r.listing_id) || { sum: 0, count: 0 };
+        cur.sum += r.rating;
+        cur.count += 1;
+        map.set(r.listing_id, cur);
+      });
+      const result: Record<string, { avg: number; count: number }> = {};
+      map.forEach((v, k) => {
+        result[k] = { avg: parseFloat((v.sum / v.count).toFixed(1)), count: v.count };
+      });
+      return result;
+    },
+  });
+
   // Fetch bookings overlapping the requested date range to exclude unavailable listings
   const { data: conflictingListingIds } = useQuery({
     queryKey: [
@@ -109,13 +130,14 @@ const Index = () => {
     if (hasDbListings) {
       return dbListings.map((l) => {
         const photos = (l.listing_photos || []).sort((a, b) => a.sort_order - b.sort_order);
+        const stats = ratingsByListing?.[l.id];
         return {
           id: l.id,
           image: photos[0]?.url || listing1,
           title: l.title,
           location: l.city || "Unknown",
-          rating: 0,
-          reviews: 0,
+          rating: stats?.avg ?? 0,
+          reviews: stats?.count ?? 0,
           price: l.price_per_night,
           verified: true,
           tags: (l.amenities || []).slice(0, 2),
@@ -128,7 +150,7 @@ const Index = () => {
       });
     }
     return fallbackListings.map((l) => ({ ...l, latitude: null, longitude: null, createdAt: null }));
-  }, [dbListings, hasDbListings]);
+  }, [dbListings, hasDbListings, ratingsByListing]);
 
   const filteredListings = useMemo(() => {
     return allListings.filter((listing) => {

@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+const reviewSchema = z.object({
+  rating: z.number().int().min(1, "Please select a rating").max(5),
+  comment: z.string().trim().max(1000, "Comment must be 1000 characters or fewer").optional(),
+});
 
 interface ReviewFormProps {
   bookingId: string;
@@ -21,8 +27,9 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
   const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
-    if (rating === 0) {
-      toast.error("Please select a rating");
+    const parsed = reviewSchema.safeParse({ rating, comment: comment.trim() || undefined });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     setSubmitting(true);
@@ -31,13 +38,18 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
         booking_id: bookingId,
         listing_id: listingId,
         reviewer_id: reviewerId,
-        rating,
-        comment: comment.trim() || null,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment ?? null,
       });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") throw new Error("You've already reviewed this stay");
+        throw error;
+      }
       toast.success("Review submitted!");
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["listings-ratings"] });
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to submit review");
@@ -69,12 +81,16 @@ const ReviewForm = ({ bookingId, listingId, reviewerId, onClose }: ReviewFormPro
           </button>
         ))}
       </div>
-      <Textarea
-        placeholder="Tell others about your experience..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        rows={3}
-      />
+      <div className="space-y-1">
+        <Textarea
+          placeholder="Tell others about your experience..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value.slice(0, 1000))}
+          rows={3}
+          maxLength={1000}
+        />
+        <p className="text-xs text-muted-foreground text-right">{comment.length}/1000</p>
+      </div>
       <div className="flex gap-2">
         <Button size="sm" onClick={handleSubmit} disabled={submitting}>
           {submitting ? "Submitting..." : "Submit Review"}
