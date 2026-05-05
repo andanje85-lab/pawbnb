@@ -55,11 +55,15 @@ const ListingCard = ({ id, image, title, location, rating, reviews, price, verif
       <div className="space-y-1">
         <div className="flex items-start justify-between">
           <h3 className="font-semibold text-foreground text-sm leading-tight">{title}</h3>
-          <div className="flex items-center gap-1 shrink-0 ml-2">
-            <Star className="w-3.5 h-3.5 fill-warm-gold text-warm-gold" />
-            <span className="text-xs font-medium text-foreground">{rating}</span>
-            <span className="text-xs text-muted-foreground">({reviews})</span>
-          </div>
+          {reviews > 0 ? (
+            <div className="flex items-center gap-1 shrink-0 ml-2">
+              <Star className="w-3.5 h-3.5 fill-warm-gold text-warm-gold" />
+              <span className="text-xs font-medium text-foreground">{rating}</span>
+              <span className="text-xs text-muted-foreground">({reviews})</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground shrink-0 ml-2">New</span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
           <MapPin className="w-3 h-3" />
