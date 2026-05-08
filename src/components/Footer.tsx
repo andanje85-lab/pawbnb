@@ -1,4 +1,5 @@
 import { Dog } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -19,25 +20,25 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3 text-sm">For Dog Owners</h4>
             <ul className="space-y-2 text-sm text-background/60">
-              <li><a href="#" className="hover:text-background transition-colors">Find a Host</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">How It Works</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Insurance</a></li>
+              <li><Link to="/#listings" className="hover:text-background transition-colors">Find a Host</Link></li>
+              <li><Link to="/#how-it-works" className="hover:text-background transition-colors">How It Works</Link></li>
+              <li><Link to="/#trust" className="hover:text-background transition-colors">Insurance</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-3 text-sm">For Hosts</h4>
             <ul className="space-y-2 text-sm text-background/60">
-              <li><a href="#" className="hover:text-background transition-colors">Become a Host</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Host Resources</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Pricing</a></li>
+              <li><Link to="/create-listing" className="hover:text-background transition-colors">Become a Host</Link></li>
+              <li><Link to="/#how-it-works" className="hover:text-background transition-colors">Host Resources</Link></li>
+              <li><Link to="/#listings" className="hover:text-background transition-colors">Pricing</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-3 text-sm">Support</h4>
             <ul className="space-y-2 text-sm text-background/60">
-              <li><a href="#" className="hover:text-background transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Safety</a></li>
-              <li><a href="#" className="hover:text-background transition-colors">Contact Us</a></li>
+              <li><Link to="/#trust" className="hover:text-background transition-colors">Help Center</Link></li>
+              <li><Link to="/#trust" className="hover:text-background transition-colors">Safety</Link></li>
+              <li><a href="mailto:hello@pawbnb.com" className="hover:text-background transition-colors">Contact Us</a></li>
             </ul>
           </div>
         </div>
