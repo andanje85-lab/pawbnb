@@ -22,23 +22,23 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-background/60">
               <li><Link to="/#listings" className="hover:text-background transition-colors">Find a Host</Link></li>
               <li><Link to="/#how-it-works" className="hover:text-background transition-colors">How It Works</Link></li>
-              <li><Link to="/#trust" className="hover:text-background transition-colors">Insurance</Link></li>
+              <li><Link to="/insurance" className="hover:text-background transition-colors">Insurance</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-3 text-sm">For Hosts</h4>
             <ul className="space-y-2 text-sm text-background/60">
               <li><Link to="/create-listing" className="hover:text-background transition-colors">Become a Host</Link></li>
-              <li><Link to="/#how-it-works" className="hover:text-background transition-colors">Host Resources</Link></li>
-              <li><Link to="/#listings" className="hover:text-background transition-colors">Pricing</Link></li>
+              <li><Link to="/host-resources" className="hover:text-background transition-colors">Host Resources</Link></li>
+              <li><Link to="/pricing" className="hover:text-background transition-colors">Pricing</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-3 text-sm">Support</h4>
             <ul className="space-y-2 text-sm text-background/60">
-              <li><Link to="/#trust" className="hover:text-background transition-colors">Help Center</Link></li>
-              <li><Link to="/#trust" className="hover:text-background transition-colors">Safety</Link></li>
-              <li><a href="mailto:hello@pawbnb.com" className="hover:text-background transition-colors">Contact Us</a></li>
+              <li><Link to="/help-center" className="hover:text-background transition-colors">Help Center</Link></li>
+              <li><Link to="/safety" className="hover:text-background transition-colors">Safety</Link></li>
+              <li><Link to="/contact" className="hover:text-background transition-colors">Contact Us</Link></li>
             </ul>
           </div>
         </div>
