@@ -60,7 +60,11 @@ const Hero = () => {
                   className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none w-full"
                 />
               </div>
-              <Button size="lg" className="rounded-xl px-6">
+              <Button
+                size="lg"
+                className="rounded-xl px-6"
+                onClick={() => document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
