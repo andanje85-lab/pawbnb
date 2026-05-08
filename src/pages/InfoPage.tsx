@@ -100,8 +100,8 @@ const CONTENT: Record<InfoSlug, {
 };
 
 const InfoPage = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const data = slug && (CONTENT as any)[slug] ? CONTENT[slug as InfoSlug] : null;
+  const slug = useLocation().pathname.replace(/^\//, "") as InfoSlug;
+  const data = (CONTENT as any)[slug] ?? null;
 
   if (!data) return <Navigate to="/" replace />;
 
