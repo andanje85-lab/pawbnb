@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,10 +58,17 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="font-medium text-sm text-foreground">{name}</span>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(review.created_at), "MMM yyyy")}
+                  </span>
+                  <span
+                    title="This review is from a guest who completed a confirmed booking."
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-accent/60 text-accent-foreground text-[10px] font-medium"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    Verified stay
                   </span>
                 </div>
                 <div className="flex gap-0.5 mb-1">
