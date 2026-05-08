@@ -14,6 +14,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Messages from "./pages/Messages";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
+import InfoPage from "./pages/InfoPage";
+import ScrollToHash from "./components/ScrollToHash";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ScrollToHash />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -34,6 +37,12 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/booking-success" element={<BookingSuccess />} />
+            <Route path="/insurance" element={<InfoPage />} />
+            <Route path="/host-resources" element={<InfoPage />} />
+            <Route path="/pricing" element={<InfoPage />} />
+            <Route path="/help-center" element={<InfoPage />} />
+            <Route path="/safety" element={<InfoPage />} />
+            <Route path="/contact" element={<InfoPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
