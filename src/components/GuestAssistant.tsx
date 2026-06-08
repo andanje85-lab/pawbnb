@@ -108,14 +108,16 @@ const GuestAssistant = () => {
     setStreaming(true);
 
     try {
+      const context = await buildContext(pathname, user?.id).catch(() => ({ route: pathname }));
       const res = await fetch(`${SUPABASE_URL}/functions/v1/guest-assistant`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, context }),
       });
+
 
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => ({ error: "Something went wrong" }));
