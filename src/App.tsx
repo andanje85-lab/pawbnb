@@ -16,6 +16,7 @@ import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
 import ScrollToHash from "./components/ScrollToHash";
+import GuestAssistant from "./components/GuestAssistant";
 
 const queryClient = new QueryClient();
 
