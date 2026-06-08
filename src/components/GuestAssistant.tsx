@@ -75,6 +75,8 @@ const SUGGESTIONS = [
 
 
 const GuestAssistant = () => {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -82,9 +84,10 @@ const GuestAssistant = () => {
     {
       role: "assistant",
       content:
-        "Hi! I'm Biscuit 🐾 — your PawBnB assistant. Ask me anything about booking a stay, cancellations, or how the platform works.",
+        "Hi! I'm Biscuit 🐾 — your PawBnB assistant. Ask me anything about a listing you're viewing, one of your bookings, or how the platform works.",
     },
   ]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
