@@ -3,54 +3,85 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are Biscuit, the friendly AI concierge for PawBnB — a peer-to-peer marketplace where dog owners book stays with trusted local hosts.
+const BASE_PROMPT = `You are Biscuit, the friendly AI concierge for PawBnB — a peer-to-peer marketplace where dog owners book stays with trusted local hosts.
 
-Your job is to help guests (dog owners) understand and use the platform. Be warm, concise, and clear. Use short paragraphs and bullet lists when helpful.
+Your job is to help guests (dog owners) understand and use the platform. Be warm, concise, and clear. Use short paragraphs and bullet lists when helpful. Keep replies under ~150 words unless asked for more detail.
 
 What PawBnB offers guests:
 - Browse listings from verified hosts, filter by location, dates, and number of dogs
-- View listing details: photos, host info, house rules, amenities, cancellation policy, location map, and reviews from previous verified stays
-- Message hosts before booking through in-app chat (with attachments up to 10MB)
+- View listing details: photos, host info, house rules, amenities, cancellation policy, location map, and verified reviews
+- Message hosts before booking through in-app chat
 - Book a stay by selecting dates and number of dogs on the listing page
 - Track bookings (pending, confirmed, completed, cancelled) from the Dashboard
-- Leave a review after a confirmed stay — only guests with confirmed bookings can review
-- Receive email notifications when a booking is confirmed, cancelled, or updated
-- 24/7 PawBnB Care guarantee on every confirmed booking (vet support, secure messaging)
+- Leave a review after a confirmed stay
+- 24/7 PawBnB Care guarantee on every confirmed booking
 
 How to book a stay:
-1. Use the search on the home page or browse listings.
-2. Open a listing, pick your dates and number of dogs, and click Book.
-3. The host receives the request and either confirms or declines.
-4. Once confirmed, you'll see it in your Dashboard under Bookings and can message the host.
+1. Open a listing, pick your dates and number of dogs, click Book.
+2. The host receives the request and confirms or declines.
+3. Once confirmed, the booking appears in your Dashboard and you can message the host.
 
 How to cancel a booking:
-- Open the Dashboard, find the booking under "My Stays", and click Cancel.
-- Refunds follow the cancellation policy shown on the listing (Flexible, Moderate, or Strict).
+- Open the Dashboard, find the booking under My Bookings, click Cancel.
+- Refunds follow the cancellation policy on the listing (Flexible, Moderate, Strict).
 - Cancellations close to the stay date may be partially or fully non-refundable.
 
-Account & profile:
-- Sign up or log in from the top-right of the page.
-- Update your profile (name, photo, contact info) from Profile Settings.
-- Anyone can become a host by clicking "Become a Host" and creating a listing.
-
-Helpful pages:
-- /dashboard — your bookings, listings, and messages
-- /messages — all conversations with hosts
-- /profile — your profile settings
-- /create-listing — start hosting
-- /help-center, /safety, /insurance, /pricing, /contact — info pages
-
 Rules:
-- If asked about something outside PawBnB, politely redirect to platform topics.
-- If you don't know a specific detail (e.g., a user's exact booking), tell them where to find it (usually the Dashboard) or to contact hello@pawbnb.com.
-- Never invent prices, policies, or features that aren't listed above.
-- Keep replies under ~150 words unless the user asks for more detail.`;
+- If you don't know a specific detail, point users to the Dashboard or hello@pawbnb.com.
+- Never invent prices, policies, or features.
+- When the user has a CURRENT LISTING or CURRENT BOOKING context below, reference it specifically (use the title, dates, price, host, and cancellation policy from that context). Do not ask them to repeat info you already have.`;
+
+function buildContextBlock(context: any): string {
+  if (!context) return "";
+  const lines: string[] = [];
+
+  if (context.listing) {
+    const l = context.listing;
+    lines.push("CURRENT LISTING the user is viewing:");
+    if (l.title) lines.push(`- Title: ${l.title}`);
+    if (l.city) lines.push(`- Location: ${l.city}`);
+    if (l.host_name) lines.push(`- Host: ${l.host_name}`);
+    if (l.price_per_night != null) lines.push(`- Price: $${l.price_per_night}/night`);
+    if (l.max_dogs != null) lines.push(`- Max dogs: ${l.max_dogs}`);
+    if (l.cancellation_policy) lines.push(`- Cancellation policy: ${l.cancellation_policy}`);
+    if (Array.isArray(l.amenities) && l.amenities.length) lines.push(`- Amenities: ${l.amenities.join(", ")}`);
+    if (l.description) lines.push(`- Description: ${String(l.description).slice(0, 400)}`);
+    lines.push("");
+  }
+
+  if (Array.isArray(context.bookings) && context.bookings.length) {
+    lines.push("CURRENT USER'S BOOKINGS (most recent first):");
+    context.bookings.slice(0, 5).forEach((b: any, i: number) => {
+      lines.push(
+        `${i + 1}. ${b.listing_title || "Stay"} — ${b.check_in} → ${b.check_out}, ${b.number_of_dogs} dog(s), $${b.total_price} total, status: ${b.status}${b.cancellation_policy ? `, cancellation: ${b.cancellation_policy}` : ""}`
+      );
+    });
+    lines.push("");
+  }
+
+  if (context.selectedBooking) {
+    const b = context.selectedBooking;
+    lines.push("SELECTED BOOKING the user is asking about:");
+    if (b.listing_title) lines.push(`- Listing: ${b.listing_title}`);
+    if (b.host_name) lines.push(`- Host: ${b.host_name}`);
+    lines.push(`- Dates: ${b.check_in} → ${b.check_out}`);
+    if (b.number_of_dogs != null) lines.push(`- Dogs: ${b.number_of_dogs}`);
+    if (b.total_price != null) lines.push(`- Total: $${b.total_price}`);
+    if (b.status) lines.push(`- Status: ${b.status}`);
+    if (b.cancellation_policy) lines.push(`- Cancellation policy: ${b.cancellation_policy}`);
+    lines.push("");
+  }
+
+  if (context.route) lines.push(`(User is currently on page: ${context.route})`);
+
+  return lines.length ? `\n\n---\n${lines.join("\n")}` : "";
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, context } = await req.json();
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "Missing LOVABLE_API_KEY" }), {
@@ -58,6 +89,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const systemPrompt = BASE_PROMPT + buildContextBlock(context);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -68,7 +101,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         stream: true,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...(messages || [])],
+        messages: [{ role: "system", content: systemPrompt }, ...(messages || [])],
       }),
     });
 
