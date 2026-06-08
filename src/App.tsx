@@ -16,6 +16,7 @@ import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
 import ScrollToHash from "./components/ScrollToHash";
+import GuestAssistant from "./components/GuestAssistant";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <GuestAssistant />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
