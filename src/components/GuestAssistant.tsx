@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation, matchPath } from "react-router-dom";
 import { MessageCircle, X, Send, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Msg {
   role: "user" | "assistant";
@@ -13,11 +16,63 @@ interface Msg {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+async function buildContext(pathname: string, userId: string | undefined) {
+  const context: any = { route: pathname };
+
+  // Listing detail page
+  const listingMatch = matchPath("/listing/:id", pathname);
+  if (listingMatch?.params?.id) {
+    const { data } = await supabase
+      .from("listings")
+      .select("title, city, price_per_night, max_dogs, cancellation_policy, amenities, description, host_id")
+      .eq("id", listingMatch.params.id)
+      .maybeSingle();
+    if (data) {
+      let host_name: string | undefined;
+      if (data.host_id) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", data.host_id)
+          .maybeSingle();
+        host_name = prof?.full_name || undefined;
+      }
+      context.listing = { ...data, host_name };
+    }
+  }
+
+  // Logged-in user: include their recent bookings so the agent can reference them
+  if (userId) {
+    const { data: bookings } = await supabase
+      .from("bookings")
+      .select("id, check_in, check_out, number_of_dogs, total_price, status, listing_id, listings(title, cancellation_policy, profiles:host_id(full_name))")
+      .eq("guest_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (bookings && bookings.length) {
+      context.bookings = bookings.map((b: any) => ({
+        check_in: b.check_in,
+        check_out: b.check_out,
+        number_of_dogs: b.number_of_dogs,
+        total_price: b.total_price,
+        status: b.status,
+        listing_title: b.listings?.title,
+        cancellation_policy: b.listings?.cancellation_policy,
+        host_name: b.listings?.profiles?.full_name,
+      }));
+    }
+  }
+
+  return context;
+}
+
 const SUGGESTIONS = [
   "How do I book a stay?",
   "How do I cancel a booking?",
-  "What features can I use?",
+  "Tell me about this listing",
 ];
+
 
 const GuestAssistant = () => {
   const [open, setOpen] = useState(false);
