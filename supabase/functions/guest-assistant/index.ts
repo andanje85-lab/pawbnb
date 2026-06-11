@@ -73,6 +73,26 @@ function buildContextBlock(context: any): string {
     lines.push("");
   }
 
+  if (Array.isArray(context.searchResults) && context.searchResults.length) {
+    if (context.searchHints) {
+      const h = context.searchHints;
+      const parts: string[] = [];
+      if (h.city) parts.push(`city~"${h.city}"`);
+      if (h.maxPrice) parts.push(`max price $${h.maxPrice}`);
+      if (h.dogs) parts.push(`${h.dogs}+ dogs`);
+      if (Array.isArray(h.amenities) && h.amenities.length) parts.push(`amenities: ${h.amenities.join(", ")}`);
+      if (parts.length) lines.push(`SEARCH HINTS detected from user message: ${parts.join("; ")}`);
+    }
+    lines.push("SEARCH RESULTS (active listings that may match the user's request):");
+    context.searchResults.forEach((r: any, i: number) => {
+      const amen = Array.isArray(r.amenities) && r.amenities.length ? `, amenities: ${r.amenities.join(", ")}` : "";
+      lines.push(
+        `${i + 1}. ${r.title} — ${r.city || "?"}, $${r.price_per_night}/night, up to ${r.max_dogs} dog(s)${amen}. Link: ${r.url}${r.excerpt ? `\n   "${r.excerpt}"` : ""}`
+      );
+    });
+    lines.push("");
+  }
+
   if (context.route) lines.push(`(User is currently on page: ${context.route})`);
 
   return lines.length ? `\n\n---\n${lines.join("\n")}` : "";
