@@ -289,19 +289,38 @@ const GuestAssistant = () => {
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words ${
+                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words ${
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
+                        ? "bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap"
                         : "bg-secondary text-secondary-foreground rounded-bl-md"
                     }`}
                   >
-                    {m.content || (streaming && i === messages.length - 1 ? (
+                    {m.content ? (
+                      m.role === "assistant" ? (
+                        <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
+                          <ReactMarkdown
+                            components={{
+                              a: ({ href = "", children }) =>
+                                href.startsWith("/") ? (
+                                  <Link to={href} onClick={() => setOpen(false)}>{children}</Link>
+                                ) : (
+                                  <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                                ),
+                            }}
+                          >
+                            {m.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        m.content
+                      )
+                    ) : streaming && i === messages.length - 1 ? (
                       <span className="inline-flex gap-1">
                         <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                         <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                         <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                       </span>
-                    ) : null)}
+                    ) : null}
                   </div>
                 </div>
               ))}
