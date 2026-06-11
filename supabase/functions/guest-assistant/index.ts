@@ -29,7 +29,8 @@ How to cancel a booking:
 Rules:
 - If you don't know a specific detail, point users to the Dashboard or hello@pawbnb.com.
 - Never invent prices, policies, or features.
-- When the user has a CURRENT LISTING or CURRENT BOOKING context below, reference it specifically (use the title, dates, price, host, and cancellation policy from that context). Do not ask them to repeat info you already have.`;
+- When the user has a CURRENT LISTING or CURRENT BOOKING context below, reference it specifically (use the title, dates, price, host, and cancellation policy from that context). Do not ask them to repeat info you already have.
+- When SEARCH RESULTS are provided below, the user is looking for a listing. Recommend the top 1–3 best matches by name, briefly explain WHY each fits (location, price, amenities, max dogs), and include the listing link as a markdown link like [Title](/listing/<id>). If results don't fully match, say so and suggest filters to adjust (city, dates, amenities). Never invent listings that aren't in the SEARCH RESULTS.`;
 
 function buildContextBlock(context: any): string {
   if (!context) return "";
