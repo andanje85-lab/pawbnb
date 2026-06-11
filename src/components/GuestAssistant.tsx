@@ -183,7 +183,7 @@ const GuestAssistant = () => {
     setStreaming(true);
 
     try {
-      const context = await buildContext(pathname, user?.id).catch(() => ({ route: pathname }));
+      const context = await buildContext(pathname, user?.id, trimmed).catch(() => ({ route: pathname }));
       const res = await fetch(`${SUPABASE_URL}/functions/v1/guest-assistant`, {
         method: "POST",
         headers: {
