@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 // Lazy loader for the Google Maps JS API (async + callback pattern).
 let loaderPromise: Promise<typeof google> | null = null;
 
