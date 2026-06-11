@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationPicker from "@/components/LocationPicker";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const AMENITY_OPTIONS = [
   "Fenced Yard", "Dog Beds", "Treats Provided", "Daily Photos",
