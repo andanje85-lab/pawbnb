@@ -16,7 +16,59 @@ interface Msg {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-async function buildContext(pathname: string, userId: string | undefined) {
+const KNOWN_AMENITIES = [
+  "fenced yard","yard","garden","pool","park","beach","walks","dog walk","walking",
+  "grooming","training","pickup","drop off","pet sitter","sitter","cameras","camera",
+  "ac","air conditioning","heating","crate","kennel","kitchen","wifi","parking","large dogs",
+  "small dogs","puppy","senior","medication","vet","24/7","cat friendly","kids",
+];
+
+function extractSearchHints(text: string) {
+  const t = text.toLowerCase();
+  const amenities = KNOWN_AMENITIES.filter((a) => t.includes(a));
+  // crude city: "in X" / "near X" / "around X"
+  const cityMatch = t.match(/\b(?:in|near|around|at)\s+([a-zà-ÿ][a-zà-ÿ\s\-']{1,40}?)(?:[.,?!]|$| with| for| that| who| who's| under| over| less| more)/i);
+  const city = cityMatch?.[1]?.trim();
+  // budget
+  const priceMatch = t.match(/(?:under|less than|below|max|<)\s*\$?\s*(\d{2,4})/);
+  const maxPrice = priceMatch ? Number(priceMatch[1]) : undefined;
+  // dogs count
+  const dogsMatch = t.match(/(\d+)\s*dogs?/);
+  const dogs = dogsMatch ? Number(dogsMatch[1]) : undefined;
+  return { amenities, city, maxPrice, dogs, raw: text };
+}
+
+async function searchListings(latestUserMsg: string) {
+  const hints = extractSearchHints(latestUserMsg);
+  let q = supabase
+    .from("listings")
+    .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy")
+    .eq("is_active", true)
+    .limit(6);
+
+  if (hints.city) q = q.ilike("city", `%${hints.city}%`);
+  if (hints.maxPrice) q = q.lte("price_per_night", hints.maxPrice);
+  if (hints.dogs) q = q.gte("max_dogs", hints.dogs);
+  if (hints.amenities.length) q = q.overlaps("amenities", hints.amenities);
+
+  let { data } = await q;
+
+  // Fallback: if nothing matched with strict filters, try broader text search
+  if ((!data || data.length === 0) && (hints.city || hints.amenities.length)) {
+    const term = hints.city || hints.amenities[0];
+    const { data: fallback } = await supabase
+      .from("listings")
+      .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy")
+      .eq("is_active", true)
+      .or(`title.ilike.%${term}%,description.ilike.%${term}%,city.ilike.%${term}%`)
+      .limit(6);
+    data = fallback || [];
+  }
+
+  return { hints, results: data || [] };
+}
+
+async function buildContext(pathname: string, userId: string | undefined, latestUserMsg: string) {
   const context: any = { route: pathname };
 
   // Listing detail page
@@ -38,6 +90,29 @@ async function buildContext(pathname: string, userId: string | undefined) {
         host_name = prof?.full_name || undefined;
       }
       context.listing = { ...data, host_name };
+    }
+  }
+
+  // Search the listings catalog based on the user's latest message
+  if (latestUserMsg && latestUserMsg.length > 3) {
+    try {
+      const { hints, results } = await searchListings(latestUserMsg);
+      if (results.length) {
+        context.searchHints = hints;
+        context.searchResults = results.map((r: any) => ({
+          id: r.id,
+          url: `/listing/${r.id}`,
+          title: r.title,
+          city: r.city,
+          price_per_night: r.price_per_night,
+          max_dogs: r.max_dogs,
+          amenities: r.amenities,
+          cancellation_policy: r.cancellation_policy,
+          excerpt: r.description ? String(r.description).slice(0, 160) : undefined,
+        }));
+      }
+    } catch {
+      // ignore search failures
     }
   }
 
