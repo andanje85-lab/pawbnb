@@ -144,9 +144,9 @@ async function buildContext(pathname: string, userId: string | undefined, latest
 }
 
 const SUGGESTIONS = [
+  "Find a stay in Austin with a fenced yard",
+  "I need a host for 2 dogs under $80/night",
   "How do I book a stay?",
-  "How do I cancel a booking?",
-  "Tell me about this listing",
 ];
 
 
