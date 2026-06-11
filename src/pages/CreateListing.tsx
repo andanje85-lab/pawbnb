@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationPicker from "@/components/LocationPicker";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const AMENITY_OPTIONS = [
   "Fenced Yard", "Dog Beds", "Treats Provided", "Daily Photos",
@@ -238,29 +239,37 @@ const CreateListing = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="city" className="text-sm font-medium flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" /> City
-                  </Label>
-                  <Input
-                    id="city"
-                    placeholder="e.g. Portland, OR"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="address" className="text-sm font-medium">Address (optional)</Label>
-                  <Input
-                    id="address"
-                    placeholder="Street address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="address" className="text-sm font-medium flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" /> Address
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-1">
+                  Start typing your address — we'll fill in the city and pin the map for you.
+                </p>
+                <AddressAutocomplete
+                  id="address"
+                  value={address}
+                  onChange={setAddress}
+                  onPlaceSelected={(p) => {
+                    setAddress(p.address);
+                    if (p.city) setCity(p.city);
+                    setCoords({ lat: p.lat, lng: p.lng });
+                  }}
+                  placeholder="123 Main St, Portland, OR"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="city" className="text-sm font-medium flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" /> City
+                </Label>
+                <Input
+                  id="city"
+                  placeholder="e.g. Portland, OR"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="mt-1.5"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
