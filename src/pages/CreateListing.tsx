@@ -34,6 +34,11 @@ const CreateListing = () => {
   const [maxDogs, setMaxDogs] = useState("1");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [pinConfirmed, setPinConfirmed] = useState(false);
+  const updateCoords = (next: { lat: number; lng: number } | null) => {
+    setCoords(next);
+    setPinConfirmed(false);
+  };
   const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>("moderate");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
