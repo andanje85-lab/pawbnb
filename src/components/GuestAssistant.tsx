@@ -361,44 +361,57 @@ const GuestAssistant = () => {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words ${
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap"
-                        : "bg-secondary text-secondary-foreground rounded-bl-md"
-                    }`}
-                  >
-                    {m.content ? (
-                      m.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
-                          <ReactMarkdown
-                            components={{
-                              a: ({ href = "", children }) =>
-                                href.startsWith("/") ? (
-                                  <Link to={href} onClick={() => setOpen(false)}>{children}</Link>
-                                ) : (
-                                  <a href={href} target="_blank" rel="noreferrer">{children}</a>
-                                ),
-                            }}
-                          >
-                            {m.content}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        m.content
-                      )
-                    ) : streaming && i === messages.length - 1 ? (
-                      <span className="inline-flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </span>
-                    ) : null}
+              {messages.map((m, i) => {
+                const referencedIds = m.role === "assistant" && m.content ? extractListingIds(m.content) : [];
+                const cards = referencedIds
+                  .map((id) => listingMetaMap[id])
+                  .filter(Boolean) as BiscuitListingMeta[];
+                return (
+                  <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words ${
+                        m.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap"
+                          : "bg-secondary text-secondary-foreground rounded-bl-md"
+                      }`}
+                    >
+                      {m.content ? (
+                        m.role === "assistant" ? (
+                          <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
+                            <ReactMarkdown
+                              components={{
+                                a: ({ href = "", children }) =>
+                                  href.startsWith("/") ? (
+                                    <Link to={href} onClick={() => setOpen(false)}>{children}</Link>
+                                  ) : (
+                                    <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                                  ),
+                              }}
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          m.content
+                        )
+                      ) : streaming && i === messages.length - 1 ? (
+                        <span className="inline-flex gap-1">
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </span>
+                      ) : null}
+                    </div>
+                    {cards.length > 0 && (
+                      <div className="w-full max-w-[90%] flex flex-col gap-1.5">
+                        {cards.map((c) => (
+                          <BiscuitListingCard key={c.id} listing={c} onNavigate={() => setOpen(false)} />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {messages.length === 1 && !streaming && (
                 <div className="pt-2 flex flex-wrap gap-2">
