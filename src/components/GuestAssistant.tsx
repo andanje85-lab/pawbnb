@@ -61,7 +61,7 @@ async function searchListings(latestUserMsg: string) {
     const term = hints.city || hints.amenities[0];
     const { data: fallback } = await supabase
       .from("listings")
-      .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy")
+      .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy, listing_photos(url, sort_order)")
       .eq("is_active", true)
       .or(`title.ilike.%${term}%,description.ilike.%${term}%,city.ilike.%${term}%`)
       .limit(6);
