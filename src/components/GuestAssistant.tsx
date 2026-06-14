@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+import BiscuitListingCard, { type BiscuitListingMeta } from "@/components/BiscuitListingCard";
+
 interface Msg {
   role: "user" | "assistant";
   content: string;
