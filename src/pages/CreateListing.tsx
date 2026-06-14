@@ -94,6 +94,8 @@ const CreateListing = () => {
     if (!city.trim()) { toast.error("Please add a city"); return; }
     if (!price || parseFloat(price) <= 0) { toast.error("Please set a valid price"); return; }
     if (photos.length === 0) { toast.error("Please add at least one photo"); return; }
+    if (!coords) { toast.error("Please pin your location on the map"); return; }
+    if (!pinConfirmed) { toast.error("Please confirm the pin location before publishing"); return; }
 
     setSubmitting(true);
     try {
