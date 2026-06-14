@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+import BiscuitListingCard, { type BiscuitListingMeta } from "@/components/BiscuitListingCard";
+
 interface Msg {
   role: "user" | "assistant";
   content: string;
@@ -43,7 +45,7 @@ async function searchListings(latestUserMsg: string) {
   const hints = extractSearchHints(latestUserMsg);
   let q = supabase
     .from("listings")
-    .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy")
+    .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy, listing_photos(url, sort_order)")
     .eq("is_active", true)
     .limit(6);
 
@@ -59,7 +61,7 @@ async function searchListings(latestUserMsg: string) {
     const term = hints.city || hints.amenities[0];
     const { data: fallback } = await supabase
       .from("listings")
-      .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy")
+      .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy, listing_photos(url, sort_order)")
       .eq("is_active", true)
       .or(`title.ilike.%${term}%,description.ilike.%${term}%,city.ilike.%${term}%`)
       .limit(6);
@@ -71,13 +73,20 @@ async function searchListings(latestUserMsg: string) {
 
 async function buildContext(pathname: string, userId: string | undefined, latestUserMsg: string) {
   const context: any = { route: pathname };
+  const listingMeta: BiscuitListingMeta[] = [];
+
+  const pickPhoto = (photos: any): string | null => {
+    if (!Array.isArray(photos) || !photos.length) return null;
+    const sorted = [...photos].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return sorted[0]?.url ?? null;
+  };
 
   // Listing detail page
   const listingMatch = matchPath("/listing/:id", pathname);
   if (listingMatch?.params?.id) {
     const { data } = await supabase
       .from("listings")
-      .select("title, city, price_per_night, max_dogs, cancellation_policy, amenities, description, host_id")
+      .select("id, title, city, price_per_night, max_dogs, cancellation_policy, amenities, description, host_id, listing_photos(url, sort_order)")
       .eq("id", listingMatch.params.id)
       .maybeSingle();
     if (data) {
@@ -91,6 +100,13 @@ async function buildContext(pathname: string, userId: string | undefined, latest
         host_name = prof?.full_name || undefined;
       }
       context.listing = { ...data, host_name };
+      listingMeta.push({
+        id: data.id,
+        title: data.title,
+        city: data.city,
+        price_per_night: data.price_per_night,
+        photo: pickPhoto((data as any).listing_photos),
+      });
     }
   }
 
@@ -111,6 +127,15 @@ async function buildContext(pathname: string, userId: string | undefined, latest
           cancellation_policy: r.cancellation_policy,
           excerpt: r.description ? String(r.description).slice(0, 160) : undefined,
         }));
+        for (const r of results as any[]) {
+          listingMeta.push({
+            id: r.id,
+            title: r.title,
+            city: r.city,
+            price_per_night: r.price_per_night,
+            photo: pickPhoto(r.listing_photos),
+          });
+        }
       }
     } catch {
       // ignore search failures
@@ -140,7 +165,34 @@ async function buildContext(pathname: string, userId: string | undefined, latest
     }
   }
 
-  return context;
+  return { context, listingMeta };
+}
+
+async function fetchListingMeta(ids: string[]): Promise<BiscuitListingMeta[]> {
+  if (!ids.length) return [];
+  const { data } = await supabase
+    .from("listings")
+    .select("id, title, city, price_per_night, listing_photos(url, sort_order)")
+    .in("id", ids);
+  if (!data) return [];
+  return data.map((r: any) => {
+    const photos = Array.isArray(r.listing_photos) ? [...r.listing_photos].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)) : [];
+    return {
+      id: r.id,
+      title: r.title,
+      city: r.city,
+      price_per_night: r.price_per_night,
+      photo: photos[0]?.url ?? null,
+    };
+  });
+}
+
+const LISTING_ID_RE = /\/listing\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+
+function extractListingIds(text: string): string[] {
+  const ids = new Set<string>();
+  for (const m of text.matchAll(LISTING_ID_RE)) ids.add(m[1].toLowerCase());
+  return [...ids];
 }
 
 const SUGGESTIONS = [
@@ -163,6 +215,16 @@ const GuestAssistant = () => {
         "Hi! I'm Biscuit 🐾 — your PawBnB assistant. Ask me anything about a listing you're viewing, one of your bookings, or how the platform works.",
     },
   ]);
+  const [listingMetaMap, setListingMetaMap] = useState<Record<string, BiscuitListingMeta>>({});
+
+  const mergeMeta = (items: BiscuitListingMeta[]) => {
+    if (!items.length) return;
+    setListingMetaMap((prev) => {
+      const copy = { ...prev };
+      for (const it of items) if (!copy[it.id]) copy[it.id] = it;
+      return copy;
+    });
+  };
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -184,7 +246,9 @@ const GuestAssistant = () => {
     setStreaming(true);
 
     try {
-      const context = await buildContext(pathname, user?.id, trimmed).catch(() => ({ route: pathname }));
+      const built = await buildContext(pathname, user?.id, trimmed).catch(() => ({ context: { route: pathname }, listingMeta: [] as BiscuitListingMeta[] }));
+      const context = built.context;
+      mergeMeta(built.listingMeta);
       const res = await fetch(`${SUPABASE_URL}/functions/v1/guest-assistant`, {
         method: "POST",
         headers: {
@@ -239,6 +303,17 @@ const GuestAssistant = () => {
       setMessages(next);
     } finally {
       setStreaming(false);
+      // Fetch meta for any listings referenced in the assistant's reply that we don't already have.
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && last.content) {
+          const ids = extractListingIds(last.content).filter((id) => !listingMetaMap[id]);
+          if (ids.length) {
+            fetchListingMeta(ids).then(mergeMeta).catch(() => {});
+          }
+        }
+        return prev;
+      });
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
@@ -286,44 +361,57 @@ const GuestAssistant = () => {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words ${
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap"
-                        : "bg-secondary text-secondary-foreground rounded-bl-md"
-                    }`}
-                  >
-                    {m.content ? (
-                      m.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
-                          <ReactMarkdown
-                            components={{
-                              a: ({ href = "", children }) =>
-                                href.startsWith("/") ? (
-                                  <Link to={href} onClick={() => setOpen(false)}>{children}</Link>
-                                ) : (
-                                  <a href={href} target="_blank" rel="noreferrer">{children}</a>
-                                ),
-                            }}
-                          >
-                            {m.content}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        m.content
-                      )
-                    ) : streaming && i === messages.length - 1 ? (
-                      <span className="inline-flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </span>
-                    ) : null}
+              {messages.map((m, i) => {
+                const referencedIds = m.role === "assistant" && m.content ? extractListingIds(m.content) : [];
+                const cards = referencedIds
+                  .map((id) => listingMetaMap[id])
+                  .filter(Boolean) as BiscuitListingMeta[];
+                return (
+                  <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words ${
+                        m.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap"
+                          : "bg-secondary text-secondary-foreground rounded-bl-md"
+                      }`}
+                    >
+                      {m.content ? (
+                        m.role === "assistant" ? (
+                          <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
+                            <ReactMarkdown
+                              components={{
+                                a: ({ href = "", children }) =>
+                                  href.startsWith("/") ? (
+                                    <Link to={href} onClick={() => setOpen(false)}>{children}</Link>
+                                  ) : (
+                                    <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                                  ),
+                              }}
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          m.content
+                        )
+                      ) : streaming && i === messages.length - 1 ? (
+                        <span className="inline-flex gap-1">
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </span>
+                      ) : null}
+                    </div>
+                    {cards.length > 0 && (
+                      <div className="w-full max-w-[90%] flex flex-col gap-1.5">
+                        {cards.map((c) => (
+                          <BiscuitListingCard key={c.id} listing={c} onNavigate={() => setOpen(false)} />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {messages.length === 1 && !streaming && (
                 <div className="pt-2 flex flex-wrap gap-2">
