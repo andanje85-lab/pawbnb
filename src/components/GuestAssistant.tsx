@@ -73,13 +73,20 @@ async function searchListings(latestUserMsg: string) {
 
 async function buildContext(pathname: string, userId: string | undefined, latestUserMsg: string) {
   const context: any = { route: pathname };
+  const listingMeta: BiscuitListingMeta[] = [];
+
+  const pickPhoto = (photos: any): string | null => {
+    if (!Array.isArray(photos) || !photos.length) return null;
+    const sorted = [...photos].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return sorted[0]?.url ?? null;
+  };
 
   // Listing detail page
   const listingMatch = matchPath("/listing/:id", pathname);
   if (listingMatch?.params?.id) {
     const { data } = await supabase
       .from("listings")
-      .select("title, city, price_per_night, max_dogs, cancellation_policy, amenities, description, host_id")
+      .select("id, title, city, price_per_night, max_dogs, cancellation_policy, amenities, description, host_id, listing_photos(url, sort_order)")
       .eq("id", listingMatch.params.id)
       .maybeSingle();
     if (data) {
@@ -93,6 +100,13 @@ async function buildContext(pathname: string, userId: string | undefined, latest
         host_name = prof?.full_name || undefined;
       }
       context.listing = { ...data, host_name };
+      listingMeta.push({
+        id: data.id,
+        title: data.title,
+        city: data.city,
+        price_per_night: data.price_per_night,
+        photo: pickPhoto((data as any).listing_photos),
+      });
     }
   }
 
@@ -113,6 +127,15 @@ async function buildContext(pathname: string, userId: string | undefined, latest
           cancellation_policy: r.cancellation_policy,
           excerpt: r.description ? String(r.description).slice(0, 160) : undefined,
         }));
+        for (const r of results as any[]) {
+          listingMeta.push({
+            id: r.id,
+            title: r.title,
+            city: r.city,
+            price_per_night: r.price_per_night,
+            photo: pickPhoto(r.listing_photos),
+          });
+        }
       }
     } catch {
       // ignore search failures
@@ -142,7 +165,34 @@ async function buildContext(pathname: string, userId: string | undefined, latest
     }
   }
 
-  return context;
+  return { context, listingMeta };
+}
+
+async function fetchListingMeta(ids: string[]): Promise<BiscuitListingMeta[]> {
+  if (!ids.length) return [];
+  const { data } = await supabase
+    .from("listings")
+    .select("id, title, city, price_per_night, listing_photos(url, sort_order)")
+    .in("id", ids);
+  if (!data) return [];
+  return data.map((r: any) => {
+    const photos = Array.isArray(r.listing_photos) ? [...r.listing_photos].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)) : [];
+    return {
+      id: r.id,
+      title: r.title,
+      city: r.city,
+      price_per_night: r.price_per_night,
+      photo: photos[0]?.url ?? null,
+    };
+  });
+}
+
+const LISTING_ID_RE = /\/listing\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+
+function extractListingIds(text: string): string[] {
+  const ids = new Set<string>();
+  for (const m of text.matchAll(LISTING_ID_RE)) ids.add(m[1].toLowerCase());
+  return [...ids];
 }
 
 const SUGGESTIONS = [
