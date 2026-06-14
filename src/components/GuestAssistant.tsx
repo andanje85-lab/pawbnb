@@ -215,6 +215,16 @@ const GuestAssistant = () => {
         "Hi! I'm Biscuit 🐾 — your PawBnB assistant. Ask me anything about a listing you're viewing, one of your bookings, or how the platform works.",
     },
   ]);
+  const [listingMetaMap, setListingMetaMap] = useState<Record<string, BiscuitListingMeta>>({});
+
+  const mergeMeta = (items: BiscuitListingMeta[]) => {
+    if (!items.length) return;
+    setListingMetaMap((prev) => {
+      const copy = { ...prev };
+      for (const it of items) if (!copy[it.id]) copy[it.id] = it;
+      return copy;
+    });
+  };
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
