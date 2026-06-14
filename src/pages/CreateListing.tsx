@@ -318,9 +318,48 @@ const CreateListing = () => {
                 Pin your location
               </Label>
               <p className="text-sm text-muted-foreground mb-4">
-                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin.
+                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin. When it looks right, confirm it below.
               </p>
-              <LocationPicker value={coords} onChange={setCoords} city={city} />
+              <LocationPicker value={coords} onChange={updateCoords} city={city} />
+
+              {coords && (
+                <div className="mt-4 rounded-xl border border-border p-4 bg-card">
+                  {pinConfirmed ? (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="font-medium text-foreground">Pin confirmed</span>
+                        <span className="text-muted-foreground">
+                          ({coords.lat.toFixed(5)}, {coords.lng.toFixed(5)})
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPinConfirmed(false)}
+                      >
+                        Adjust pin
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-sm">
+                        <div className="font-medium text-foreground">Does this pin look right?</div>
+                        <div className="text-muted-foreground text-xs mt-0.5">
+                          Drag, click the map, or search to fine-tune it before publishing.
+                        </div>
+                      </div>
+                      <Button type="button" size="sm" onClick={() => setPinConfirmed(true)}>
+                        <Check className="w-4 h-4" />
+                        Confirm pin location
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
 
