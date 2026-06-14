@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2, Shield, Check } from "lucide-react";
 import { POLICY_PRESETS, type CancellationPolicy } from "@/lib/cancellationPolicy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,11 @@ const CreateListing = () => {
   const [maxDogs, setMaxDogs] = useState("1");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [pinConfirmed, setPinConfirmed] = useState(false);
+  const updateCoords = (next: { lat: number; lng: number } | null) => {
+    setCoords(next);
+    setPinConfirmed(false);
+  };
   const [cancellationPolicy, setCancellationPolicy] = useState<CancellationPolicy>("moderate");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
@@ -89,6 +94,8 @@ const CreateListing = () => {
     if (!city.trim()) { toast.error("Please add a city"); return; }
     if (!price || parseFloat(price) <= 0) { toast.error("Please set a valid price"); return; }
     if (photos.length === 0) { toast.error("Please add at least one photo"); return; }
+    if (!coords) { toast.error("Please pin your location on the map"); return; }
+    if (!pinConfirmed) { toast.error("Please confirm the pin location before publishing"); return; }
 
     setSubmitting(true);
     try {
@@ -253,7 +260,7 @@ const CreateListing = () => {
                   onPlaceSelected={(p) => {
                     setAddress(p.address);
                     if (p.city) setCity(p.city);
-                    setCoords({ lat: p.lat, lng: p.lng });
+                    updateCoords({ lat: p.lat, lng: p.lng });
                   }}
                   placeholder="123 Main St, Portland, OR"
                 />
@@ -311,9 +318,48 @@ const CreateListing = () => {
                 Pin your location
               </Label>
               <p className="text-sm text-muted-foreground mb-4">
-                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin.
+                Help guests see exactly where your space is. Search, use your current location, or click the map to drop a pin. When it looks right, confirm it below.
               </p>
-              <LocationPicker value={coords} onChange={setCoords} city={city} />
+              <LocationPicker value={coords} onChange={updateCoords} city={city} />
+
+              {coords && (
+                <div className="mt-4 rounded-xl border border-border p-4 bg-card">
+                  {pinConfirmed ? (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="font-medium text-foreground">Pin confirmed</span>
+                        <span className="text-muted-foreground">
+                          ({coords.lat.toFixed(5)}, {coords.lng.toFixed(5)})
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPinConfirmed(false)}
+                      >
+                        Adjust pin
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-sm">
+                        <div className="font-medium text-foreground">Does this pin look right?</div>
+                        <div className="text-muted-foreground text-xs mt-0.5">
+                          Drag, click the map, or search to fine-tune it before publishing.
+                        </div>
+                      </div>
+                      <Button type="button" size="sm" onClick={() => setPinConfirmed(true)}>
+                        <Check className="w-4 h-4" />
+                        Confirm pin location
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
 
