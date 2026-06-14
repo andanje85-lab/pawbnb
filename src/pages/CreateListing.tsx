@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { Camera, X, Plus, DollarSign, MapPin, Dog, Sparkles, ArrowLeft, Loader2, Shield, Check } from "lucide-react";
 import { POLICY_PRESETS, type CancellationPolicy } from "@/lib/cancellationPolicy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
