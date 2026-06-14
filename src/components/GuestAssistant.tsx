@@ -246,7 +246,9 @@ const GuestAssistant = () => {
     setStreaming(true);
 
     try {
-      const context = await buildContext(pathname, user?.id, trimmed).catch(() => ({ route: pathname }));
+      const built = await buildContext(pathname, user?.id, trimmed).catch(() => ({ context: { route: pathname }, listingMeta: [] as BiscuitListingMeta[] }));
+      const context = built.context;
+      mergeMeta(built.listingMeta);
       const res = await fetch(`${SUPABASE_URL}/functions/v1/guest-assistant`, {
         method: "POST",
         headers: {
