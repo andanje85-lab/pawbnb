@@ -260,7 +260,7 @@ const CreateListing = () => {
                   onPlaceSelected={(p) => {
                     setAddress(p.address);
                     if (p.city) setCity(p.city);
-                    setCoords({ lat: p.lat, lng: p.lng });
+                    updateCoords({ lat: p.lat, lng: p.lng });
                   }}
                   placeholder="123 Main St, Portland, OR"
                 />
