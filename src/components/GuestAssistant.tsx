@@ -45,7 +45,7 @@ async function searchListings(latestUserMsg: string) {
   const hints = extractSearchHints(latestUserMsg);
   let q = supabase
     .from("listings")
-    .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy, listing_photos(photo_url, display_order)")
+    .select("id, title, city, price_per_night, max_dogs, amenities, description, cancellation_policy, listing_photos(url, sort_order)")
     .eq("is_active", true)
     .limit(6);
 
