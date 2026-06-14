@@ -303,6 +303,17 @@ const GuestAssistant = () => {
       setMessages(next);
     } finally {
       setStreaming(false);
+      // Fetch meta for any listings referenced in the assistant's reply that we don't already have.
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && last.content) {
+          const ids = extractListingIds(last.content).filter((id) => !listingMetaMap[id]);
+          if (ids.length) {
+            fetchListingMeta(ids).then(mergeMeta).catch(() => {});
+          }
+        }
+        return prev;
+      });
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
