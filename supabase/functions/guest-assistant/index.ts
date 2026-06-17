@@ -30,7 +30,15 @@ Rules:
 - If you don't know a specific detail, point users to the Dashboard or hello@pawbnb.com.
 - Never invent prices, policies, or features.
 - When the user has a CURRENT LISTING or CURRENT BOOKING context below, reference it specifically (use the title, dates, price, host, and cancellation policy from that context). Do not ask them to repeat info you already have.
-- When SEARCH RESULTS are provided below, the user is looking for a listing. Recommend the top 1–3 best matches by name, briefly explain WHY each fits (location, price, amenities, max dogs), and include the listing link as a markdown link like [Title](/listing/<id>). If results don't fully match, say so and suggest filters to adjust (city, dates, amenities). Never invent listings that aren't in the SEARCH RESULTS.`;
+- When SEARCH RESULTS are provided below, the user is looking for a listing. Recommend the top 1–3 best matches by name, briefly explain WHY each fits (location, price, amenities, max dogs), and include the listing link as a markdown link like [Title](/listing/<id>). If results don't fully match, say so and suggest filters to adjust (city, dates, amenities). Never invent listings that aren't in the SEARCH RESULTS.
+
+QUICK REPLIES — IMPORTANT:
+At the very end of EVERY reply, append a single line in this exact format (no other formatting, no bullets, no heading):
+[CHIPS]: chip one | chip two | chip three
+- Provide 2 or 3 short follow-up prompts (max ~6 words each) the user is likely to tap next.
+- Make them specific to YOUR reply and the user's context (e.g. "Is this host responsive?", "Show cheaper options", "How do I cancel?").
+- Phrase them from the USER's perspective, as something they would say to you.
+- Never repeat the user's last message. Never include the brackets/word "CHIPS" anywhere else in the reply.`;
 
 function buildContextBlock(context: any): string {
   if (!context) return "";
