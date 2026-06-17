@@ -195,6 +195,19 @@ function extractListingIds(text: string): string[] {
   return [...ids];
 }
 
+const CHIPS_RE = /\n?\s*\[CHIPS\]\s*:\s*(.+?)\s*$/i;
+
+function splitChips(content: string): { text: string; chips: string[] } {
+  const m = content.match(CHIPS_RE);
+  if (!m) return { text: content, chips: [] };
+  const chips = m[1]
+    .split("|")
+    .map((c) => c.trim().replace(/^["'\-•*]\s*/, "").replace(/["']$/, ""))
+    .filter((c) => c.length > 0 && c.length <= 80)
+    .slice(0, 3);
+  return { text: content.replace(CHIPS_RE, "").trimEnd(), chips };
+}
+
 const SUGGESTIONS = [
   "Find a stay in Austin with a fenced yard",
   "I need a host for 2 dogs under $80/night",
