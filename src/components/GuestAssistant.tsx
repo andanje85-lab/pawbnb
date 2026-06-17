@@ -195,6 +195,19 @@ function extractListingIds(text: string): string[] {
   return [...ids];
 }
 
+const CHIPS_RE = /\n?\s*\[CHIPS\]\s*:\s*(.+?)\s*$/i;
+
+function splitChips(content: string): { text: string; chips: string[] } {
+  const m = content.match(CHIPS_RE);
+  if (!m) return { text: content, chips: [] };
+  const chips = m[1]
+    .split("|")
+    .map((c) => c.trim().replace(/^["'\-•*]\s*/, "").replace(/["']$/, ""))
+    .filter((c) => c.length > 0 && c.length <= 80)
+    .slice(0, 3);
+  return { text: content.replace(CHIPS_RE, "").trimEnd(), chips };
+}
+
 const SUGGESTIONS = [
   "Find a stay in Austin with a fenced yard",
   "I need a host for 2 dogs under $80/night",
@@ -362,10 +375,14 @@ const GuestAssistant = () => {
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => {
-                const referencedIds = m.role === "assistant" && m.content ? extractListingIds(m.content) : [];
+                const isLast = i === messages.length - 1;
+                const { text: displayText, chips } =
+                  m.role === "assistant" && m.content ? splitChips(m.content) : { text: m.content, chips: [] as string[] };
+                const referencedIds = m.role === "assistant" && displayText ? extractListingIds(displayText) : [];
                 const cards = referencedIds
                   .map((id) => listingMetaMap[id])
                   .filter(Boolean) as BiscuitListingMeta[];
+                const showChips = m.role === "assistant" && isLast && !streaming && chips.length > 0;
                 return (
                   <div key={i} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
                     <div
@@ -375,7 +392,7 @@ const GuestAssistant = () => {
                           : "bg-secondary text-secondary-foreground rounded-bl-md"
                       }`}
                     >
-                      {m.content ? (
+                      {displayText ? (
                         m.role === "assistant" ? (
                           <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-a:text-primary prose-a:underline">
                             <ReactMarkdown
@@ -388,13 +405,13 @@ const GuestAssistant = () => {
                                   ),
                               }}
                             >
-                              {m.content}
+                              {displayText}
                             </ReactMarkdown>
                           </div>
                         ) : (
-                          m.content
+                          displayText
                         )
-                      ) : streaming && i === messages.length - 1 ? (
+                      ) : streaming && isLast ? (
                         <span className="inline-flex gap-1">
                           <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                           <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -406,6 +423,19 @@ const GuestAssistant = () => {
                       <div className="w-full max-w-[90%] flex flex-col gap-1.5">
                         {cards.map((c) => (
                           <BiscuitListingCard key={c.id} listing={c} onNavigate={() => setOpen(false)} />
+                        ))}
+                      </div>
+                    )}
+                    {showChips && (
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {chips.map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => send(c)}
+                            className="text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition"
+                          >
+                            {c}
+                          </button>
                         ))}
                       </div>
                     )}
