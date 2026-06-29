@@ -497,6 +497,13 @@ const Dashboard = () => {
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}
+                            {booking.status === "pending" && (booking as any).expires_at && (
+                              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 mb-3 inline-flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Auto-expires in{" "}
+                                {formatDistanceToNowStrict(new Date((booking as any).expires_at))}
+                              </p>
+                            )}
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
