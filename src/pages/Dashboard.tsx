@@ -22,14 +22,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock } from "lucide-react";
+import { format, formatDistanceToNowStrict } from "date-fns";
+import { computeRefund } from "@/lib/refund";
 import listing1 from "@/assets/listing-1.jpg";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   confirmed: "bg-green-100 text-green-800 border-green-200",
   cancelled: "bg-red-100 text-red-800 border-red-200",
+  expired: "bg-muted text-muted-foreground border-border",
 };
 
 const Dashboard = () => {
@@ -60,7 +62,7 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, listings(title, city, price_per_night, listing_photos(url, sort_order))")
+        .select("*, listings(title, city, price_per_night, cancellation_policy, listing_photos(url, sort_order))")
         .eq("guest_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -210,15 +212,35 @@ const Dashboard = () => {
   };
 
   const cancelBooking = async (bookingId: string) => {
+    const booking = bookings?.find((b) => b.id === bookingId);
+    const listing = booking?.listings as any;
+    const quote = booking
+      ? computeRefund(listing?.cancellation_policy, booking.check_in, Number(booking.total_price))
+      : null;
+
     const { error } = await supabase
       .from("bookings")
-      .update({ status: "cancelled" })
+      .update({
+        status: "cancelled",
+        ...(quote
+          ? ({
+              cancelled_at: new Date().toISOString(),
+              cancelled_by: user!.id,
+              refund_percentage: quote.percentage,
+              refund_amount: quote.amount,
+            } as any)
+          : {}),
+      } as any)
       .eq("id", bookingId)
       .eq("guest_id", user!.id);
     if (error) {
       toast.error("Failed to cancel booking");
     } else {
-      toast.success("Booking cancelled");
+      toast.success(
+        quote && quote.percentage > 0
+          ? `Booking cancelled — $${quote.amount.toFixed(2)} refund (${quote.percentage}%)`
+          : "Booking cancelled",
+      );
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
     }
     setCancelBookingId(null);
