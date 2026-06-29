@@ -533,21 +533,52 @@ const Dashboard = () => {
       {/* Cancel Booking Confirmation Dialog */}
       <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The booking will be marked as cancelled and the host will be notified.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
-            >
-              Yes, Cancel Booking
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          {(() => {
+            const booking = bookings?.find((b) => b.id === cancelBookingId);
+            const listing = booking?.listings as any;
+            const quote = booking
+              ? computeRefund(listing?.cancellation_policy, booking.check_in, Number(booking.total_price))
+              : null;
+            const tierColor =
+              quote?.tier === "free"
+                ? "bg-green-50 border-green-200 text-green-900"
+                : quote?.tier === "partial"
+                ? "bg-amber-50 border-amber-200 text-amber-900"
+                : "bg-red-50 border-red-200 text-red-900";
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Your refund is calculated from this listing's cancellation policy.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {quote && (
+                  <div className={`rounded-lg border p-4 ${tierColor}`}>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <span className="text-sm font-medium">Refund</span>
+                      <span className="font-serif text-2xl font-bold">
+                        ${quote.amount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="text-xs opacity-80 mb-2">
+                      {quote.percentage}% of ${Number(booking?.total_price).toFixed(2)}
+                    </div>
+                    <p className="text-xs">{quote.reason}</p>
+                  </div>
+                )}
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
+                  >
+                    Yes, Cancel Booking
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
         </AlertDialogContent>
       </AlertDialog>
     </div>
