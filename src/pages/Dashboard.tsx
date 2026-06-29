@@ -22,14 +22,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock } from "lucide-react";
+import { format, formatDistanceToNowStrict } from "date-fns";
+import { computeRefund } from "@/lib/refund";
 import listing1 from "@/assets/listing-1.jpg";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   confirmed: "bg-green-100 text-green-800 border-green-200",
   cancelled: "bg-red-100 text-red-800 border-red-200",
+  expired: "bg-muted text-muted-foreground border-border",
 };
 
 const Dashboard = () => {
@@ -60,7 +62,7 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, listings(title, city, price_per_night, listing_photos(url, sort_order))")
+        .select("*, listings(title, city, price_per_night, cancellation_policy, listing_photos(url, sort_order))")
         .eq("guest_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -210,15 +212,35 @@ const Dashboard = () => {
   };
 
   const cancelBooking = async (bookingId: string) => {
+    const booking = bookings?.find((b) => b.id === bookingId);
+    const listing = booking?.listings as any;
+    const quote = booking
+      ? computeRefund(listing?.cancellation_policy, booking.check_in, Number(booking.total_price))
+      : null;
+
     const { error } = await supabase
       .from("bookings")
-      .update({ status: "cancelled" })
+      .update({
+        status: "cancelled",
+        ...(quote
+          ? ({
+              cancelled_at: new Date().toISOString(),
+              cancelled_by: user!.id,
+              refund_percentage: quote.percentage,
+              refund_amount: quote.amount,
+            } as any)
+          : {}),
+      } as any)
       .eq("id", bookingId)
       .eq("guest_id", user!.id);
     if (error) {
       toast.error("Failed to cancel booking");
     } else {
-      toast.success("Booking cancelled");
+      toast.success(
+        quote && quote.percentage > 0
+          ? `Booking cancelled — $${quote.amount.toFixed(2)} refund (${quote.percentage}%)`
+          : "Booking cancelled",
+      );
       queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
     }
     setCancelBookingId(null);
@@ -475,6 +497,13 @@ const Dashboard = () => {
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}
+                            {booking.status === "pending" && (booking as any).expires_at && (
+                              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 mb-3 inline-flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Auto-expires in{" "}
+                                {formatDistanceToNowStrict(new Date((booking as any).expires_at))}
+                              </p>
+                            )}
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
@@ -511,21 +540,52 @@ const Dashboard = () => {
       {/* Cancel Booking Confirmation Dialog */}
       <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The booking will be marked as cancelled and the host will be notified.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
-            >
-              Yes, Cancel Booking
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          {(() => {
+            const booking = bookings?.find((b) => b.id === cancelBookingId);
+            const listing = booking?.listings as any;
+            const quote = booking
+              ? computeRefund(listing?.cancellation_policy, booking.check_in, Number(booking.total_price))
+              : null;
+            const tierColor =
+              quote?.tier === "free"
+                ? "bg-green-50 border-green-200 text-green-900"
+                : quote?.tier === "partial"
+                ? "bg-amber-50 border-amber-200 text-amber-900"
+                : "bg-red-50 border-red-200 text-red-900";
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Your refund is calculated from this listing's cancellation policy.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                {quote && (
+                  <div className={`rounded-lg border p-4 ${tierColor}`}>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <span className="text-sm font-medium">Refund</span>
+                      <span className="font-serif text-2xl font-bold">
+                        ${quote.amount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="text-xs opacity-80 mb-2">
+                      {quote.percentage}% of ${Number(booking?.total_price).toFixed(2)}
+                    </div>
+                    <p className="text-xs">{quote.reason}</p>
+                  </div>
+                )}
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => cancelBookingId && cancelBooking(cancelBookingId)}
+                  >
+                    Yes, Cancel Booking
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
         </AlertDialogContent>
       </AlertDialog>
     </div>
