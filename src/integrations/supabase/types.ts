@@ -43,40 +43,58 @@ export type Database = {
       }
       bookings: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           check_in: string
           check_out: string
           created_at: string
+          expires_at: string | null
           guest_id: string
           id: string
           listing_id: string
           message: string | null
           number_of_dogs: number
+          refund_amount: number | null
+          refund_percentage: number | null
           status: string
           total_price: number
           updated_at: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           check_in: string
           check_out: string
           created_at?: string
+          expires_at?: string | null
           guest_id: string
           id?: string
           listing_id: string
           message?: string | null
           number_of_dogs?: number
+          refund_amount?: number | null
+          refund_percentage?: number | null
           status?: string
           total_price?: number
           updated_at?: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           check_in?: string
           check_out?: string
           created_at?: string
+          expires_at?: string | null
           guest_id?: string
           id?: string
           listing_id?: string
           message?: string | null
           number_of_dogs?: number
+          refund_amount?: number | null
+          refund_percentage?: number | null
           status?: string
           total_price?: number
           updated_at?: string
@@ -362,6 +380,7 @@ export type Database = {
         Args: { _listing_id: string }
         Returns: boolean
       }
+      expire_stale_bookings: { Args: never; Returns: undefined }
       get_listing_address: { Args: { _listing_id: string }; Returns: string }
       get_my_role: { Args: never; Returns: string }
       has_role: {
