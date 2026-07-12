@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
+import { HostAvailability } from "@/components/HostAvailability";
+import { HostEarnings } from "@/components/HostEarnings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
