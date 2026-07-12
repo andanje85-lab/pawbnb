@@ -265,11 +265,25 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-8">Manage your bookings{isHost ? " and listings" : ""}.</p>
 
             <Tabs defaultValue="bookings">
-              <TabsList className="mb-6">
+              <TabsList className="mb-6 flex-wrap h-auto">
                 <TabsTrigger value="bookings">My Bookings</TabsTrigger>
                 {isHost && <TabsTrigger value="listings">My Listings</TabsTrigger>}
                 {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
+                {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
+                {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
               </TabsList>
+
+              {isHost && (
+                <TabsContent value="availability">
+                  <HostAvailability listings={(listings ?? []).map((l) => ({ id: l.id, title: l.title }))} />
+                </TabsContent>
+              )}
+
+              {isHost && user && (
+                <TabsContent value="earnings">
+                  <HostEarnings hostId={user.id} />
+                </TabsContent>
+              )}
 
               {/* My Bookings Tab */}
               <TabsContent value="bookings">
