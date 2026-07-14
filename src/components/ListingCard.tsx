@@ -1,7 +1,8 @@
 import { Star, Heart, Shield, MapPin } from "lucide-react";
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 
 interface ListingCardProps {
   id: string;
@@ -18,7 +19,21 @@ interface ListingCardProps {
 }
 
 const ListingCard = ({ id, image, title, location, rating, reviews, price, verified, tags, distanceKm }: ListingCardProps) => {
-  const [liked, setLiked] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: favIds } = useFavoriteIds();
+  const toggle = useToggleFavorite();
+  const liked = (favIds || []).includes(id);
+
+  const handleHeart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    toggle.mutate({ listingId: id, isFav: liked });
+  };
 
   return (
     <Link to={`/listing/${id}`} className="block">
@@ -38,7 +53,8 @@ const ListingCard = ({ id, image, title, location, rating, reviews, price, verif
           loading="lazy"
         />
         <button
-          onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+          onClick={handleHeart}
+          aria-label={liked ? "Remove from favorites" : "Add to favorites"}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-card"
         >
           <Heart className={`w-4 h-4 transition-colors ${liked ? "fill-primary text-primary" : "text-foreground"}`} />
