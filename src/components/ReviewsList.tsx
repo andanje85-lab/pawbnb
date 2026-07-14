@@ -1,5 +1,6 @@
 import { Star, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -59,7 +60,7 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="font-medium text-sm text-foreground">{name}</span>
+                  <Link to={`/u/${review.reviewer_id}`} className="font-medium text-sm text-foreground hover:underline">{name}</Link>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(review.created_at), "MMM yyyy")}
                   </span>
