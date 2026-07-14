@@ -15,6 +15,7 @@ import Messages from "./pages/Messages";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
+import PublicProfile from "./pages/PublicProfile";
 import ScrollToHash from "./components/ScrollToHash";
 import GuestAssistant from "./components/GuestAssistant";
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/help-center" element={<InfoPage />} />
             <Route path="/safety" element={<InfoPage />} />
             <Route path="/contact" element={<InfoPage />} />
+            <Route path="/u/:userId" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

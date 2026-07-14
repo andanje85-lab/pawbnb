@@ -167,6 +167,7 @@ const ListingDetail = () => {
         price: dbListing.price_per_night,
         verified: true,
         hostName: (dbListing as any)._hostName || "Host",
+        hostId: dbListing.host_id as string,
         description: dbListing.description || "",
         amenities: dbListing.amenities || [],
         maxDogs: dbListing.max_dogs,
@@ -410,7 +411,16 @@ const ListingDetail = () => {
                   <Dog className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground text-sm">Hosted by {listing.hostName}</p>
+                  <p className="font-semibold text-foreground text-sm">
+                    Hosted by{" "}
+                    {(listing as any).hostId ? (
+                      <Link to={`/u/${(listing as any).hostId}`} className="hover:underline text-primary">
+                        {listing.hostName}
+                      </Link>
+                    ) : (
+                      listing.hostName
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground">Up to {listing.maxDogs} dog{listing.maxDogs > 1 ? "s" : ""} welcome</p>
                 </div>
               </div>

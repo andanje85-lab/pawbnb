@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
+import FavoritesList from "@/components/FavoritesList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,9 +40,11 @@ const statusColors: Record<string, string> = {
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
+  const activeTab = searchParams.get("tab") || "bookings";
 
   // Fetch profile to check host status
   const { data: profile } = useQuery({
@@ -266,14 +269,19 @@ const Dashboard = () => {
             </h1>
             <p className="text-muted-foreground mb-8">Manage your bookings{isHost ? " and listings" : ""}.</p>
 
-            <Tabs defaultValue="bookings">
+            <Tabs value={activeTab} onValueChange={(v) => setSearchParams(v === "bookings" ? {} : { tab: v })}>
               <TabsList className="mb-6 flex-wrap h-auto">
                 <TabsTrigger value="bookings">My Bookings</TabsTrigger>
+                <TabsTrigger value="favorites">Favorites</TabsTrigger>
                 {isHost && <TabsTrigger value="listings">My Listings</TabsTrigger>}
                 {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
                 {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
                 {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
               </TabsList>
+
+              <TabsContent value="favorites">
+                <FavoritesList />
+              </TabsContent>
 
               {isHost && (
                 <TabsContent value="availability">
