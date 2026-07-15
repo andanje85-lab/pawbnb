@@ -11,8 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { User, Camera, Loader2 } from "lucide-react";
+import { User, Camera, Loader2, ShieldCheck, BadgeCheck } from "lucide-react";
+import { format } from "date-fns";
 
 const ProfileSettings = () => {
   const { user, loading: authLoading } = useAuth();
