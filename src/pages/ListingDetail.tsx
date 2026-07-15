@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare } from "lucide-react";
+import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare, BadgeCheck } from "lucide-react";
 import ReviewsList from "@/components/ReviewsList";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
