@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.guest-assistant]
 verify_jwt = false
+
+[functions.send-message-notification]
+verify_jwt = false
+
+[functions.send-review-reminders]
+verify_jwt = false
