@@ -173,6 +173,51 @@ const PublicProfile = () => {
           </CardContent>
         </Card>
 
+        {/* Host response stats */}
+        {profile.is_host && responseStats && (responseStats.sample_size ?? 0) > 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="font-serif text-lg font-bold text-foreground mb-4">Response stats</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {Math.round(Number(responseStats.response_rate) * 100)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Response rate</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {formatResponseTime(responseStats.avg_response_minutes ?? 0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Avg. response</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Dog className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {responseStats.sample_size}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Conversations</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+
         {/* Host listings */}
         {profile.is_host && (hostListings?.length ?? 0) > 0 && (
           <section>
