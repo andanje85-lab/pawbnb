@@ -414,14 +414,22 @@ const ListingDetail = () => {
                   <Dog className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground text-sm">
-                    Hosted by{" "}
-                    {(listing as any).hostId ? (
-                      <Link to={`/u/${(listing as any).hostId}`} className="hover:underline text-primary">
-                        {listing.hostName}
-                      </Link>
-                    ) : (
-                      listing.hostName
+                  <p className="font-semibold text-foreground text-sm flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      Hosted by{" "}
+                      {(listing as any).hostId ? (
+                        <Link to={`/u/${(listing as any).hostId}`} className="hover:underline text-primary">
+                          {listing.hostName}
+                        </Link>
+                      ) : (
+                        listing.hostName
+                      )}
+                    </span>
+                    {(listing as any).hostVerified && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary bg-primary/10 border border-primary/30 rounded-full px-2 py-0.5">
+                        <BadgeCheck className="w-3 h-3" />
+                        ID Verified
+                      </span>
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">Up to {listing.maxDogs} dog{listing.maxDogs > 1 ? "s" : ""} welcome</p>
