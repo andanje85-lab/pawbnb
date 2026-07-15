@@ -169,6 +169,7 @@ const ListingDetail = () => {
         price: dbListing.price_per_night,
         verified: true,
         hostName: (dbListing as any)._hostName || "Host",
+        hostVerified: (dbListing as any)._hostVerified as boolean,
         hostId: dbListing.host_id as string,
         description: dbListing.description || "",
         amenities: dbListing.amenities || [],
