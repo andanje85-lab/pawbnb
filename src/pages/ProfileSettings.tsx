@@ -75,6 +75,24 @@ const ProfileSettings = () => {
     },
   });
 
+  const verifyIdentity = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ id_verified: true, id_verified_at: new Date().toISOString() })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      setVerifyOpen(false);
+      setVerifyName("");
+      setVerifyAttest(false);
+      toast({ title: "Identity verified", description: "Your ID verified badge is now visible on your profile and listings." });
+    },
+    onError: () => toast({ title: "Verification failed", description: "Please try again.", variant: "destructive" }),
+  });
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
