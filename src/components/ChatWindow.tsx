@@ -226,6 +226,12 @@ const ChatWindow = ({ bookingId, recipientId, recipientName, listingTitle, onBac
     if (!error) {
       setNewMessage("");
       setPendingFiles([]);
+      // Fire-and-forget email notification (throttled server-side)
+      supabase.functions
+        .invoke("send-message-notification", {
+          body: { bookingId, recipientId, contentPreview: content },
+        })
+        .catch(() => {});
     }
     setSending(false);
     setUploading(false);
