@@ -7,10 +7,18 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, MapPin, Star, ShieldCheck, Dog } from "lucide-react";
+import { User, MapPin, Star, ShieldCheck, Dog, BadgeCheck, Zap, Clock } from "lucide-react";
 import { format } from "date-fns";
 import ListingCard from "@/components/ListingCard";
 import listing1 from "@/assets/listing-1.jpg";
+
+const formatResponseTime = (mins: number) => {
+  if (!mins || mins < 1) return "<1 min";
+  if (mins < 60) return `${Math.round(mins)} min`;
+  const hours = mins / 60;
+  if (hours < 24) return `${hours < 3 ? hours.toFixed(1) : Math.round(hours)} hr`;
+  return `${Math.round(hours / 24)} d`;
+};
 
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -20,7 +28,7 @@ const PublicProfile = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id, full_name, bio, city, avatar_url, is_host, created_at")
+        .select("user_id, full_name, bio, city, avatar_url, is_host, created_at, id_verified, id_verified_at")
         .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
@@ -74,6 +82,17 @@ const PublicProfile = () => {
       return data || [];
     },
     enabled: !!userId,
+  });
+
+  // Host response stats
+  const { data: responseStats } = useQuery({
+    queryKey: ["host-response-stats", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_host_response_stats", { _host_id: userId! });
+      if (error) throw error;
+      return data?.[0] || null;
+    },
+    enabled: !!userId && !!profile?.is_host,
   });
 
   if (profileLoading) {
@@ -131,6 +150,12 @@ const PublicProfile = () => {
                       Host
                     </Badge>
                   )}
+                  {profile.id_verified && (
+                    <Badge className="gap-1 bg-primary/10 text-primary hover:bg-primary/15 border border-primary/30">
+                      <BadgeCheck className="w-3 h-3" />
+                      ID Verified
+                    </Badge>
+                  )}
                 </div>
                 {profile.city && (
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
@@ -155,6 +180,51 @@ const PublicProfile = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Host response stats */}
+        {profile.is_host && responseStats && (responseStats.sample_size ?? 0) > 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="font-serif text-lg font-bold text-foreground mb-4">Response stats</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {Math.round(Number(responseStats.response_rate) * 100)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Response rate</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {formatResponseTime(responseStats.avg_response_minutes ?? 0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Avg. response</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Dog className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground leading-none">
+                      {responseStats.sample_size}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Conversations</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* Host listings */}
         {profile.is_host && (hostListings?.length ?? 0) > 0 && (

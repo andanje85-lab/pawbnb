@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare } from "lucide-react";
+import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare, BadgeCheck } from "lucide-react";
 import ReviewsList from "@/components/ReviewsList";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -97,15 +97,17 @@ const ListingDetail = () => {
       if (error) throw error;
       // Fetch host profile separately
       let hostName = "Host";
+      let hostVerified = false;
       if (data) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, id_verified")
           .eq("user_id", data.host_id)
           .maybeSingle();
         hostName = profile?.full_name || "Host";
+        hostVerified = !!profile?.id_verified;
       }
-      return data ? { ...data, _hostName: hostName } : null;
+      return data ? { ...data, _hostName: hostName, _hostVerified: hostVerified } : null;
       if (error) throw error;
       return data;
     },
@@ -167,6 +169,7 @@ const ListingDetail = () => {
         price: dbListing.price_per_night,
         verified: true,
         hostName: (dbListing as any)._hostName || "Host",
+        hostVerified: (dbListing as any)._hostVerified as boolean,
         hostId: dbListing.host_id as string,
         description: dbListing.description || "",
         amenities: dbListing.amenities || [],
@@ -411,14 +414,22 @@ const ListingDetail = () => {
                   <Dog className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground text-sm">
-                    Hosted by{" "}
-                    {(listing as any).hostId ? (
-                      <Link to={`/u/${(listing as any).hostId}`} className="hover:underline text-primary">
-                        {listing.hostName}
-                      </Link>
-                    ) : (
-                      listing.hostName
+                  <p className="font-semibold text-foreground text-sm flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      Hosted by{" "}
+                      {(listing as any).hostId ? (
+                        <Link to={`/u/${(listing as any).hostId}`} className="hover:underline text-primary">
+                          {listing.hostName}
+                        </Link>
+                      ) : (
+                        listing.hostName
+                      )}
+                    </span>
+                    {(listing as any).hostVerified && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary bg-primary/10 border border-primary/30 rounded-full px-2 py-0.5">
+                        <BadgeCheck className="w-3 h-3" />
+                        ID Verified
+                      </span>
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">Up to {listing.maxDogs} dog{listing.maxDogs > 1 ? "s" : ""} welcome</p>
