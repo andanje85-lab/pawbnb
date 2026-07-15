@@ -30,6 +30,10 @@ const ProfileSettings = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyName, setVerifyName] = useState("");
+  const [verifyAttest, setVerifyAttest] = useState(false);
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
