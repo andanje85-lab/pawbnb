@@ -97,15 +97,17 @@ const ListingDetail = () => {
       if (error) throw error;
       // Fetch host profile separately
       let hostName = "Host";
+      let hostVerified = false;
       if (data) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, id_verified")
           .eq("user_id", data.host_id)
           .maybeSingle();
         hostName = profile?.full_name || "Host";
+        hostVerified = !!profile?.id_verified;
       }
-      return data ? { ...data, _hostName: hostName } : null;
+      return data ? { ...data, _hostName: hostName, _hostVerified: hostVerified } : null;
       if (error) throw error;
       return data;
     },
