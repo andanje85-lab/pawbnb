@@ -76,6 +76,17 @@ const PublicProfile = () => {
     enabled: !!userId,
   });
 
+  // Host response stats
+  const { data: responseStats } = useQuery({
+    queryKey: ["host-response-stats", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_host_response_stats", { _host_id: userId! });
+      if (error) throw error;
+      return data?.[0] || null;
+    },
+    enabled: !!userId && !!profile?.is_host,
+  });
+
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background">
