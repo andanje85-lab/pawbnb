@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, MapPin, Star, ShieldCheck, Dog } from "lucide-react";
+import { User, MapPin, Star, ShieldCheck, Dog, BadgeCheck, Zap, Clock } from "lucide-react";
 import { format } from "date-fns";
 import ListingCard from "@/components/ListingCard";
 import listing1 from "@/assets/listing-1.jpg";
