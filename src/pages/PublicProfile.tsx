@@ -142,6 +142,12 @@ const PublicProfile = () => {
                       Host
                     </Badge>
                   )}
+                  {profile.id_verified && (
+                    <Badge className="gap-1 bg-primary/10 text-primary hover:bg-primary/15 border border-primary/30">
+                      <BadgeCheck className="w-3 h-3" />
+                      ID Verified
+                    </Badge>
+                  )}
                 </div>
                 {profile.city && (
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
