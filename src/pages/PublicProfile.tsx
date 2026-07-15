@@ -12,6 +12,14 @@ import { format } from "date-fns";
 import ListingCard from "@/components/ListingCard";
 import listing1 from "@/assets/listing-1.jpg";
 
+const formatResponseTime = (mins: number) => {
+  if (!mins || mins < 1) return "<1 min";
+  if (mins < 60) return `${Math.round(mins)} min`;
+  const hours = mins / 60;
+  if (hours < 24) return `${hours < 3 ? hours.toFixed(1) : Math.round(hours)} hr`;
+  return `${Math.round(hours / 24)} d`;
+};
+
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
 
