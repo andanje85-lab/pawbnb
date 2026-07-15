@@ -197,6 +197,82 @@ const ProfileSettings = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* ID verification */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              Identity verification
+            </CardTitle>
+            <CardDescription>
+              Verified hosts book faster and earn more trust from guests.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {profile?.id_verified ? (
+              <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <BadgeCheck className="w-6 h-6 text-primary shrink-0" />
+                <div>
+                  <p className="font-medium text-foreground">You're verified</p>
+                  <p className="text-xs text-muted-foreground">
+                    Verified on {profile.id_verified_at ? format(new Date(profile.id_verified_at), "MMM d, yyyy") : "your profile"}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Complete a quick identity check to earn the ID Verified badge.
+                </p>
+                <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="shrink-0"><ShieldCheck className="w-4 h-4 mr-2" />Get verified</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Verify your identity</DialogTitle>
+                      <DialogDescription>
+                        Enter your legal name exactly as it appears on your government-issued ID and confirm the attestation below.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="legalName">Legal full name</Label>
+                        <Input
+                          id="legalName"
+                          value={verifyName}
+                          onChange={(e) => setVerifyName(e.target.value)}
+                          placeholder="e.g. Jane A. Doe"
+                        />
+                      </div>
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={verifyAttest}
+                          onCheckedChange={(v) => setVerifyAttest(!!v)}
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm text-muted-foreground leading-snug">
+                          I confirm this is my real legal name and that I hold a valid government-issued ID. PawBnB may request documentation to reconfirm at any time.
+                        </span>
+                      </label>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setVerifyOpen(false)}>Cancel</Button>
+                      <Button
+                        onClick={() => verifyIdentity.mutate()}
+                        disabled={!verifyName.trim() || !verifyAttest || verifyIdentity.isPending}
+                      >
+                        {verifyIdentity.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        Confirm & verify
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
       <Footer />
     </div>
