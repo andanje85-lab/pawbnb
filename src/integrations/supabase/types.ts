@@ -338,6 +338,8 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          id_verified: boolean
+          id_verified_at: string | null
           is_host: boolean
           phone: string | null
           updated_at: string
@@ -350,6 +352,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          id_verified?: boolean
+          id_verified_at?: string | null
           is_host?: boolean
           phone?: string | null
           updated_at?: string
@@ -362,6 +366,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          id_verified?: boolean
+          id_verified_at?: string | null
           is_host?: boolean
           phone?: string | null
           updated_at?: string
@@ -442,6 +448,14 @@ export type Database = {
         Returns: boolean
       }
       expire_stale_bookings: { Args: never; Returns: undefined }
+      get_host_response_stats: {
+        Args: { _host_id: string }
+        Returns: {
+          avg_response_minutes: number
+          response_rate: number
+          sample_size: number
+        }[]
+      }
       get_listing_address: { Args: { _listing_id: string }; Returns: string }
       get_my_role: { Args: never; Returns: string }
       has_role: {
