@@ -20,7 +20,7 @@ const PublicProfile = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id, full_name, bio, city, avatar_url, is_host, created_at")
+        .select("user_id, full_name, bio, city, avatar_url, is_host, created_at, id_verified, id_verified_at")
         .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
