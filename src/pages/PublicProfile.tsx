@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { User, MapPin, Star, ShieldCheck, Dog, BadgeCheck, Zap, Clock } from "lucide-react";
 import { format } from "date-fns";
 import ListingCard from "@/components/ListingCard";
+import ReportDialog from "@/components/ReportDialog";
+import { useAuth } from "@/contexts/AuthContext";
 import listing1 from "@/assets/listing-1.jpg";
 
 const formatResponseTime = (mins: number) => {

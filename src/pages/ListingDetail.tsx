@@ -435,7 +435,7 @@ const ListingDetail = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">Up to {listing.maxDogs} dog{listing.maxDogs > 1 ? "s" : ""} welcome</p>
                 </div>
-                {(listing as any).hostId && (listing as any).id && (
+                {(listing as any).isDb && (
                   <div className="ml-auto">
                     <ReportDialog targetType="listing" targetId={(listing as any).id} triggerLabel="Report" />
                   </div>
