@@ -15,6 +15,7 @@ import Messages from "./pages/Messages";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
+import InsuranceClaim from "./pages/InsuranceClaim";
 import PublicProfile from "./pages/PublicProfile";
 import ScrollToHash from "./components/ScrollToHash";
 import GuestAssistant from "./components/GuestAssistant";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/messages" element={<Messages />} />
             <Route path="/booking-success" element={<BookingSuccess />} />
             <Route path="/insurance" element={<InfoPage />} />
+            <Route path="/insurance/claim" element={<InsuranceClaim />} />
             <Route path="/host-resources" element={<InfoPage />} />
             <Route path="/pricing" element={<InfoPage />} />
             <Route path="/help-center" element={<InfoPage />} />
