@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { User, MapPin, Star, ShieldCheck, Dog, BadgeCheck, Zap, Clock } from "lucide-react";
 import { format } from "date-fns";
 import ListingCard from "@/components/ListingCard";
+import ReportDialog from "@/components/ReportDialog";
+import { useAuth } from "@/contexts/AuthContext";
 import listing1 from "@/assets/listing-1.jpg";
 
 const formatResponseTime = (mins: number) => {
@@ -22,6 +24,7 @@ const formatResponseTime = (mins: number) => {
 
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { user } = useAuth();
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["public-profile", userId],
@@ -174,6 +177,11 @@ const PublicProfile = () => {
                     <span className="text-sm font-medium text-foreground">
                       {receivedAvg} · {reviewsReceived!.length} review{reviewsReceived!.length !== 1 ? "s" : ""} as host
                     </span>
+                  </div>
+                )}
+                {user && user.id !== userId && (
+                  <div className="mt-4">
+                    <ReportDialog targetType="user" targetId={userId!} variant="outline" />
                   </div>
                 )}
               </div>

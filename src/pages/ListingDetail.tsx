@@ -18,6 +18,7 @@ import type { DateRange } from "react-day-picker";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
+import ReportDialog from "@/components/ReportDialog";
 import { getPolicy } from "@/lib/cancellationPolicy";
 
 import listing1 from "@/assets/listing-1.jpg";
@@ -434,6 +435,11 @@ const ListingDetail = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">Up to {listing.maxDogs} dog{listing.maxDogs > 1 ? "s" : ""} welcome</p>
                 </div>
+                {(listing as any).isDb && (
+                  <div className="ml-auto">
+                    <ReportDialog targetType="listing" targetId={(listing as any).id} triggerLabel="Report" />
+                  </div>
+                )}
               </div>
 
               <div className="mb-8">
