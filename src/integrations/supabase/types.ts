@@ -138,6 +138,65 @@ export type Database = {
           },
         ]
       }
+      insurance_claims: {
+        Row: {
+          amount_requested: number | null
+          booking_id: string | null
+          claim_type: string
+          claimant_id: string
+          contact_email: string
+          contact_phone: string | null
+          created_at: string
+          description: string
+          evidence_urls: Json | null
+          id: string
+          incident_date: string
+          resolution_notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_requested?: number | null
+          booking_id?: string | null
+          claim_type: string
+          claimant_id: string
+          contact_email: string
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          evidence_urls?: Json | null
+          id?: string
+          incident_date: string
+          resolution_notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_requested?: number | null
+          booking_id?: string | null
+          claim_type?: string
+          claimant_id?: string
+          contact_email?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          evidence_urls?: Json | null
+          id?: string
+          incident_date?: string
+          resolution_notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_blocked_dates: {
         Row: {
           blocked_date: string
@@ -372,6 +431,45 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolution_notes: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolution_notes?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_notes?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
