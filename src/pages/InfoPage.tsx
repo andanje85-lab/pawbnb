@@ -40,7 +40,7 @@ const CONTENT: Record<InfoSlug, {
       { heading: "Property protection for hosts", body: "Hosts are protected against accidental damage caused during a confirmed booking." },
       { heading: "24/7 support", body: "Reach our team any time during a stay through the in-app messaging or by email." },
     ],
-    cta: { label: "Contact our team", to: "/contact" },
+    cta: { label: "File a claim", to: "/insurance/claim" },
   },
   "host-resources": {
     icon: BookOpen,
