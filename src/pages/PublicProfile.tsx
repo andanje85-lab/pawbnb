@@ -24,6 +24,7 @@ const formatResponseTime = (mins: number) => {
 
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { user } = useAuth();
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["public-profile", userId],
@@ -176,6 +177,11 @@ const PublicProfile = () => {
                     <span className="text-sm font-medium text-foreground">
                       {receivedAvg} · {reviewsReceived!.length} review{reviewsReceived!.length !== 1 ? "s" : ""} as host
                     </span>
+                  </div>
+                )}
+                {user && user.id !== userId && (
+                  <div className="mt-4">
+                    <ReportDialog targetType="user" targetId={userId!} variant="outline" />
                   </div>
                 )}
               </div>
