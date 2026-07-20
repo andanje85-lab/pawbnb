@@ -45,6 +45,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
+  const [settingsListing, setSettingsListing] = useState<any>(null);
   const activeTab = searchParams.get("tab") || "bookings";
 
   // Fetch profile to check host status
