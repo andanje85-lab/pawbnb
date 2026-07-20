@@ -181,11 +181,16 @@ const ListingDetail = () => {
         latitude: (dbListing as any).latitude as number | null,
         longitude: (dbListing as any).longitude as number | null,
         cancellationPolicy: (dbListing as any).cancellation_policy as string | null,
+        bookingType: ((dbListing as any).booking_type as string) || "request",
+        extraDogPrice: Number((dbListing as any).extra_dog_price ?? 0),
+        repeatGuestDiscountPct: Number((dbListing as any).repeat_guest_discount_pct ?? 0),
+        longStayMinNights: (dbListing as any).long_stay_min_nights as number | null,
+        longStayDiscountPct: Number((dbListing as any).long_stay_discount_pct ?? 0),
         isDb: true,
       };
     }
     if (mock) {
-      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate" };
+      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate", bookingType: "request", extraDogPrice: 0, repeatGuestDiscountPct: 0, longStayMinNights: null, longStayDiscountPct: 0 };
     }
     return null;
   }, [isUuid, dbListing, mock, id, reviewStats]);
