@@ -364,7 +364,7 @@ const ListingDetail = () => {
     }
   };
 
-  const totalPrice = nights * listing.price;
+  const totalPrice = pricing?.total ?? nights * listing.price;
 
   return (
     <div className="min-h-screen bg-background">
