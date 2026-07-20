@@ -590,6 +590,16 @@ const Dashboard = () => {
       </main>
       <Footer />
 
+      {settingsListing && (
+        <ListingSettingsDialog
+          listing={settingsListing}
+          open={!!settingsListing}
+          onOpenChange={(o) => !o && setSettingsListing(null)}
+        />
+      )}
+
+
+
       {/* Cancel Booking Confirmation Dialog */}
       <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
         <AlertDialogContent>
