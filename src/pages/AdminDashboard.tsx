@@ -18,8 +18,9 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
   ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
-  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2
+  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2, Flag, ShieldAlert
 } from "lucide-react";
+import { ReportsTriage, ClaimsTriage } from "@/components/AdminTriage";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
