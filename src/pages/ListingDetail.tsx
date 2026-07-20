@@ -202,6 +202,32 @@ const ListingDetail = () => {
     return 0;
   }, [dateRange]);
 
+  // Repeat-guest check
+  const { data: isRepeat = false } = useQuery({
+    queryKey: ["is-repeat-guest", user?.id, (listing as any)?.hostId],
+    enabled: !!user?.id && !!(listing as any)?.hostId && !!(listing as any)?.isDb,
+    queryFn: () => isRepeatGuestFor(user!.id, (listing as any).hostId),
+  });
+
+  const pricing = useMemo(() => {
+    if (!listing) return null;
+    return computePricing(
+      {
+        price_per_night: (listing as any).price,
+        max_dogs: (listing as any).maxDogs,
+        extra_dog_price: (listing as any).extraDogPrice,
+        repeat_guest_discount_pct: (listing as any).repeatGuestDiscountPct,
+        long_stay_min_nights: (listing as any).longStayMinNights,
+        long_stay_discount_pct: (listing as any).longStayDiscountPct,
+        booking_type: (listing as any).bookingType,
+      },
+      nights,
+      numDogs,
+      { isRepeatGuest: isRepeat },
+    );
+  }, [listing, nights, numDogs, isRepeat]);
+
+
   if (isUuid && isLoading) {
     return (
       <div className="min-h-screen bg-background">
