@@ -388,6 +388,14 @@ const AdminDashboard = () => {
                   <BarChart2 className="w-3.5 h-3.5" />
                   Revenue
                 </TabsTrigger>
+                <TabsTrigger value="reports" className="gap-1.5">
+                  <Flag className="w-3.5 h-3.5" />
+                  Reports
+                </TabsTrigger>
+                <TabsTrigger value="claims" className="gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Claims
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
@@ -396,6 +404,13 @@ const AdminDashboard = () => {
                   </TabsTrigger>
                 )}
               </TabsList>
+
+              <TabsContent value="reports">
+                <ReportsTriage search={search} />
+              </TabsContent>
+              <TabsContent value="claims">
+                <ClaimsTriage search={search} />
+              </TabsContent>
 
               {/* Revenue Tab */}
               <TabsContent value="revenue">
