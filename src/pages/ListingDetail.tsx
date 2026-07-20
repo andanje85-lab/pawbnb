@@ -20,6 +20,8 @@ import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
 import { getPolicy } from "@/lib/cancellationPolicy";
+import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
+import { Zap, Handshake } from "lucide-react";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
@@ -83,6 +85,7 @@ const ListingDetail = () => {
   const [numDogs, setNumDogs] = useState(1);
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState(false);
+  const [meetGreetAt, setMeetGreetAt] = useState<string>("");
 
   // Check if id looks like a UUID (database listing) or a slug (mock listing)
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
@@ -178,11 +181,16 @@ const ListingDetail = () => {
         latitude: (dbListing as any).latitude as number | null,
         longitude: (dbListing as any).longitude as number | null,
         cancellationPolicy: (dbListing as any).cancellation_policy as string | null,
+        bookingType: ((dbListing as any).booking_type as string) || "request",
+        extraDogPrice: Number((dbListing as any).extra_dog_price ?? 0),
+        repeatGuestDiscountPct: Number((dbListing as any).repeat_guest_discount_pct ?? 0),
+        longStayMinNights: (dbListing as any).long_stay_min_nights as number | null,
+        longStayDiscountPct: Number((dbListing as any).long_stay_discount_pct ?? 0),
         isDb: true,
       };
     }
     if (mock) {
-      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate" };
+      return { ...mock, id: id!, isDb: false, latitude: null, longitude: null, cancellationPolicy: "moderate", bookingType: "request", extraDogPrice: 0, repeatGuestDiscountPct: 0, longStayMinNights: null, longStayDiscountPct: 0 };
     }
     return null;
   }, [isUuid, dbListing, mock, id, reviewStats]);
@@ -193,6 +201,32 @@ const ListingDetail = () => {
     }
     return 0;
   }, [dateRange]);
+
+  // Repeat-guest check
+  const { data: isRepeat = false } = useQuery({
+    queryKey: ["is-repeat-guest", user?.id, (listing as any)?.hostId],
+    enabled: !!user?.id && !!(listing as any)?.hostId && !!(listing as any)?.isDb,
+    queryFn: () => isRepeatGuestFor(user!.id, (listing as any).hostId),
+  });
+
+  const pricing = useMemo(() => {
+    if (!listing) return null;
+    return computePricing(
+      {
+        price_per_night: (listing as any).price,
+        max_dogs: (listing as any).maxDogs,
+        extra_dog_price: (listing as any).extraDogPrice,
+        repeat_guest_discount_pct: (listing as any).repeatGuestDiscountPct,
+        long_stay_min_nights: (listing as any).longStayMinNights,
+        long_stay_discount_pct: (listing as any).longStayDiscountPct,
+        booking_type: (listing as any).bookingType,
+      },
+      nights,
+      numDogs,
+      { isRepeatGuest: isRepeat },
+    );
+  }, [listing, nights, numDogs, isRepeat]);
+
 
   if (isUuid && isLoading) {
     return (
@@ -236,17 +270,30 @@ const ListingDetail = () => {
     }
     setBooking(true);
     try {
-      const { error } = await supabase.from("bookings").insert({
+      const isInstant = (listing as any).bookingType === "instant";
+      const totalToCharge = pricing?.total ?? nights * listing.price;
+      const insertPayload: any = {
         listing_id: listing.id,
         guest_id: user.id,
         check_in: dateRange.from.toISOString().split("T")[0],
         check_out: dateRange.to.toISOString().split("T")[0],
         number_of_dogs: numDogs,
-        total_price: nights * listing.price,
+        total_price: totalToCharge,
         message: message || null,
-      });
+        status: isInstant ? "confirmed" : "pending",
+        discount_applied: pricing?.discountAmount ?? 0,
+        discount_reason: pricing?.discountReason ?? null,
+        meet_greet_at: meetGreetAt ? new Date(meetGreetAt).toISOString() : null,
+        meet_greet_status: meetGreetAt ? "proposed" : null,
+      };
+      const { error } = await (supabase as any).from("bookings").insert(insertPayload);
       if (error) throw error;
-      toast.success(`Booking request sent for ${nights} night${nights > 1 ? "s" : ""}!`);
+      toast.success(
+        isInstant
+          ? `Booked! ${nights} night${nights > 1 ? "s" : ""} confirmed instantly.`
+          : `Booking request sent for ${nights} night${nights > 1 ? "s" : ""}!`
+      );
+
 
       // Fire-and-forget admin notification
       const { data: profile } = await supabase
@@ -317,7 +364,7 @@ const ListingDetail = () => {
     }
   };
 
-  const totalPrice = nights * listing.price;
+  const totalPrice = pricing?.total ?? nights * listing.price;
 
   return (
     <div className="min-h-screen bg-background">
@@ -575,6 +622,22 @@ const ListingDetail = () => {
                   />
                 </div>
 
+                <div className="mb-4">
+                  <Label htmlFor="meetGreet" className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Handshake className="w-4 h-4" />
+                    Propose a meet & greet (optional)
+                  </Label>
+                  <Input
+                    id="meetGreet"
+                    type="datetime-local"
+                    value={meetGreetAt}
+                    onChange={(e) => setMeetGreetAt(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Suggest a short intro before check-in. The host can accept or decline.
+                  </p>
+                </div>
+
                 <div className="mb-6">
                   <Label htmlFor="message" className="text-sm font-medium mb-2 flex items-center gap-1">
                     <MessageSquare className="w-4 h-4" />
@@ -589,16 +652,39 @@ const ListingDetail = () => {
                   />
                 </div>
 
-                {nights > 0 && (
+                {nights > 0 && pricing && (
                   <div className="border-t border-border pt-4 mb-4 space-y-2">
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>${listing.price} × {nights} night{nights > 1 ? "s" : ""}</span>
-                      <span>${totalPrice}</span>
+                      <span>${pricing.baseNightly} × {nights} night{nights > 1 ? "s" : ""}</span>
+                      <span>${(pricing.baseNightly * nights).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-foreground">
+                    {pricing.extraDogNightly > 0 && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Extra dogs (${(listing as any).extraDogPrice}/night × {numDogs - 1})</span>
+                        <span>${(pricing.extraDogNightly * nights).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>${pricing.subtotal.toFixed(2)}</span>
+                    </div>
+                    {pricing.discountAmount > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-600">
+                        <span>{pricing.discountReason}</span>
+                        <span>−${pricing.discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-foreground pt-2 border-t border-border/60">
                       <span>Total</span>
-                      <span>${totalPrice}</span>
+                      <span>${pricing.total.toFixed(2)}</span>
                     </div>
+                  </div>
+                )}
+
+                {(listing as any).bookingType === "instant" && (
+                  <div className="mb-3 flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <Zap className="w-3.5 h-3.5" />
+                    Instant Book — confirmed immediately, no host approval needed
                   </div>
                 )}
 
@@ -608,8 +694,15 @@ const ListingDetail = () => {
                   onClick={handleBook}
                   disabled={booking || nights === 0}
                 >
-                  {!user ? "Sign in to book" : nights === 0 ? "Select dates" : `Request to Book · $${totalPrice}`}
+                  {!user
+                    ? "Sign in to book"
+                    : nights === 0
+                    ? "Select dates"
+                    : (listing as any).bookingType === "instant"
+                    ? `Instant Book · $${totalPrice.toFixed(2)}`
+                    : `Request to Book · $${totalPrice.toFixed(2)}`}
                 </Button>
+
 
                 {(() => {
                   const policy = getPolicy(listing.cancellationPolicy);

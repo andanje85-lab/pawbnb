@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock } from "lucide-react";
+import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock, Settings, Zap, Handshake } from "lucide-react";
+import ListingSettingsDialog from "@/components/ListingSettingsDialog";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { computeRefund } from "@/lib/refund";
 import listing1 from "@/assets/listing-1.jpg";
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
+  const [settingsListing, setSettingsListing] = useState<any>(null);
   const activeTab = searchParams.get("tab") || "bookings";
 
   // Fetch profile to check host status
@@ -444,13 +446,39 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                               <MapPin className="w-3.5 h-3.5" /> {listing.city || "Unknown"}
                             </p>
-                            <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2 mt-3 flex-wrap">
                               <span className="text-sm font-medium text-foreground">${listing.price_per_night}/night</span>
                               <span className="text-muted-foreground">·</span>
                               <span className="text-sm text-muted-foreground">Max {listing.max_dogs} dogs</span>
+                              {(listing as any).booking_type === "instant" && (
+                                <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                  <Zap className="w-3 h-3" /> Instant Book
+                                </Badge>
+                              )}
+                              {Number((listing as any).extra_dog_price) > 0 && (
+                                <Badge variant="outline" className="text-[10px]">+${(listing as any).extra_dog_price}/extra dog</Badge>
+                              )}
+                              {Number((listing as any).long_stay_discount_pct) > 0 && (listing as any).long_stay_min_nights && (
+                                <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700">
+                                  {(listing as any).long_stay_discount_pct}% at {(listing as any).long_stay_min_nights}+ nights
+                                </Badge>
+                              )}
+                              {Number((listing as any).repeat_guest_discount_pct) > 0 && (
+                                <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700">
+                                  {(listing as any).repeat_guest_discount_pct}% repeat guest
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col gap-2 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSettingsListing(listing)}
+                              title="Booking settings"
+                            >
+                              <Settings className="w-4 h-4 text-muted-foreground" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -468,6 +496,7 @@ const Dashboard = () => {
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                           </div>
+
                         </motion.div>
                       ))}
                     </div>
@@ -560,6 +589,16 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+
+      {settingsListing && (
+        <ListingSettingsDialog
+          listing={settingsListing}
+          open={!!settingsListing}
+          onOpenChange={(o) => !o && setSettingsListing(null)}
+        />
+      )}
+
+
 
       {/* Cancel Booking Confirmation Dialog */}
       <AlertDialog open={!!cancelBookingId} onOpenChange={(open) => !open && setCancelBookingId(null)}>
