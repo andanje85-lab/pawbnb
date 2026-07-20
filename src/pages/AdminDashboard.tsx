@@ -18,8 +18,9 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Users, CalendarDays, MapPin, Dog, ToggleLeft,
   ToggleRight, Trash2, Search, UserCog, Plus, X, Mail, ClipboardList,
-  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2
+  UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2, Flag, ShieldAlert
 } from "lucide-react";
+import { ReportsTriage, ClaimsTriage } from "@/components/AdminTriage";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -388,6 +389,14 @@ const AdminDashboard = () => {
                   <BarChart2 className="w-3.5 h-3.5" />
                   Revenue
                 </TabsTrigger>
+                <TabsTrigger value="reports" className="gap-1.5">
+                  <Flag className="w-3.5 h-3.5" />
+                  Reports
+                </TabsTrigger>
+                <TabsTrigger value="claims" className="gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Claims
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
@@ -396,6 +405,13 @@ const AdminDashboard = () => {
                   </TabsTrigger>
                 )}
               </TabsList>
+
+              <TabsContent value="reports">
+                <ReportsTriage search={search} />
+              </TabsContent>
+              <TabsContent value="claims">
+                <ClaimsTriage search={search} />
+              </TabsContent>
 
               {/* Revenue Tab */}
               <TabsContent value="revenue">
