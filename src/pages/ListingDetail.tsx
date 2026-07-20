@@ -20,6 +20,8 @@ import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
 import { getPolicy } from "@/lib/cancellationPolicy";
+import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
+import { Zap, Handshake } from "lucide-react";
 
 import listing1 from "@/assets/listing-1.jpg";
 import listing2 from "@/assets/listing-2.jpg";
