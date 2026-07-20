@@ -49,10 +49,14 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          discount_applied: number
+          discount_reason: string | null
           expires_at: string | null
           guest_id: string
           id: string
           listing_id: string
+          meet_greet_at: string | null
+          meet_greet_status: string | null
           message: string | null
           number_of_dogs: number
           refund_amount: number | null
@@ -68,10 +72,14 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          discount_applied?: number
+          discount_reason?: string | null
           expires_at?: string | null
           guest_id: string
           id?: string
           listing_id: string
+          meet_greet_at?: string | null
+          meet_greet_status?: string | null
           message?: string | null
           number_of_dogs?: number
           refund_amount?: number | null
@@ -87,10 +95,14 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          discount_applied?: number
+          discount_reason?: string | null
           expires_at?: string | null
           guest_id?: string
           id?: string
           listing_id?: string
+          meet_greet_at?: string | null
+          meet_greet_status?: string | null
           message?: string | null
           number_of_dogs?: number
           refund_amount?: number | null
@@ -265,51 +277,66 @@ export type Database = {
         Row: {
           address: string | null
           amenities: string[] | null
+          booking_type: string
           cancellation_policy: string
           city: string | null
           created_at: string
           description: string | null
+          extra_dog_price: number
           host_id: string
           id: string
           is_active: boolean
           latitude: number | null
+          long_stay_discount_pct: number
+          long_stay_min_nights: number | null
           longitude: number | null
           max_dogs: number
           price_per_night: number
+          repeat_guest_discount_pct: number
           title: string
           updated_at: string
         }
         Insert: {
           address?: string | null
           amenities?: string[] | null
+          booking_type?: string
           cancellation_policy?: string
           city?: string | null
           created_at?: string
           description?: string | null
+          extra_dog_price?: number
           host_id: string
           id?: string
           is_active?: boolean
           latitude?: number | null
+          long_stay_discount_pct?: number
+          long_stay_min_nights?: number | null
           longitude?: number | null
           max_dogs?: number
           price_per_night?: number
+          repeat_guest_discount_pct?: number
           title: string
           updated_at?: string
         }
         Update: {
           address?: string | null
           amenities?: string[] | null
+          booking_type?: string
           cancellation_policy?: string
           city?: string | null
           created_at?: string
           description?: string | null
+          extra_dog_price?: number
           host_id?: string
           id?: string
           is_active?: boolean
           latitude?: number | null
+          long_stay_discount_pct?: number
+          long_stay_min_nights?: number | null
           longitude?: number | null
           max_dogs?: number
           price_per_night?: number
+          repeat_guest_discount_pct?: number
           title?: string
           updated_at?: string
         }
