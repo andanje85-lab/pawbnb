@@ -85,6 +85,7 @@ const ListingDetail = () => {
   const [numDogs, setNumDogs] = useState(1);
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState(false);
+  const [meetGreetAt, setMeetGreetAt] = useState<string>("");
 
   // Check if id looks like a UUID (database listing) or a slug (mock listing)
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
