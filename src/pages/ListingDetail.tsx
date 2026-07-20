@@ -622,6 +622,22 @@ const ListingDetail = () => {
                   />
                 </div>
 
+                <div className="mb-4">
+                  <Label htmlFor="meetGreet" className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Handshake className="w-4 h-4" />
+                    Propose a meet & greet (optional)
+                  </Label>
+                  <Input
+                    id="meetGreet"
+                    type="datetime-local"
+                    value={meetGreetAt}
+                    onChange={(e) => setMeetGreetAt(e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Suggest a short intro before check-in. The host can accept or decline.
+                  </p>
+                </div>
+
                 <div className="mb-6">
                   <Label htmlFor="message" className="text-sm font-medium mb-2 flex items-center gap-1">
                     <MessageSquare className="w-4 h-4" />
@@ -636,16 +652,39 @@ const ListingDetail = () => {
                   />
                 </div>
 
-                {nights > 0 && (
+                {nights > 0 && pricing && (
                   <div className="border-t border-border pt-4 mb-4 space-y-2">
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>${listing.price} × {nights} night{nights > 1 ? "s" : ""}</span>
-                      <span>${totalPrice}</span>
+                      <span>${pricing.baseNightly} × {nights} night{nights > 1 ? "s" : ""}</span>
+                      <span>${(pricing.baseNightly * nights).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-foreground">
+                    {pricing.extraDogNightly > 0 && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Extra dogs (${(listing as any).extraDogPrice}/night × {numDogs - 1})</span>
+                        <span>${(pricing.extraDogNightly * nights).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>${pricing.subtotal.toFixed(2)}</span>
+                    </div>
+                    {pricing.discountAmount > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-600">
+                        <span>{pricing.discountReason}</span>
+                        <span>−${pricing.discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-foreground pt-2 border-t border-border/60">
                       <span>Total</span>
-                      <span>${totalPrice}</span>
+                      <span>${pricing.total.toFixed(2)}</span>
                     </div>
+                  </div>
+                )}
+
+                {(listing as any).bookingType === "instant" && (
+                  <div className="mb-3 flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <Zap className="w-3.5 h-3.5" />
+                    Instant Book — confirmed immediately, no host approval needed
                   </div>
                 )}
 
@@ -655,8 +694,15 @@ const ListingDetail = () => {
                   onClick={handleBook}
                   disabled={booking || nights === 0}
                 >
-                  {!user ? "Sign in to book" : nights === 0 ? "Select dates" : `Request to Book · $${totalPrice}`}
+                  {!user
+                    ? "Sign in to book"
+                    : nights === 0
+                    ? "Select dates"
+                    : (listing as any).bookingType === "instant"
+                    ? `Instant Book · $${totalPrice.toFixed(2)}`
+                    : `Request to Book · $${totalPrice.toFixed(2)}`}
                 </Button>
+
 
                 {(() => {
                   const policy = getPolicy(listing.cancellationPolicy);
