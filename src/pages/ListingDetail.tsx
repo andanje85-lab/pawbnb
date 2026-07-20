@@ -270,17 +270,30 @@ const ListingDetail = () => {
     }
     setBooking(true);
     try {
-      const { error } = await supabase.from("bookings").insert({
+      const isInstant = (listing as any).bookingType === "instant";
+      const totalToCharge = pricing?.total ?? nights * listing.price;
+      const insertPayload: any = {
         listing_id: listing.id,
         guest_id: user.id,
         check_in: dateRange.from.toISOString().split("T")[0],
         check_out: dateRange.to.toISOString().split("T")[0],
         number_of_dogs: numDogs,
-        total_price: nights * listing.price,
+        total_price: totalToCharge,
         message: message || null,
-      });
+        status: isInstant ? "confirmed" : "pending",
+        discount_applied: pricing?.discountAmount ?? 0,
+        discount_reason: pricing?.discountReason ?? null,
+        meet_greet_at: meetGreetAt ? new Date(meetGreetAt).toISOString() : null,
+        meet_greet_status: meetGreetAt ? "proposed" : null,
+      };
+      const { error } = await (supabase as any).from("bookings").insert(insertPayload);
       if (error) throw error;
-      toast.success(`Booking request sent for ${nights} night${nights > 1 ? "s" : ""}!`);
+      toast.success(
+        isInstant
+          ? `Booked! ${nights} night${nights > 1 ? "s" : ""} confirmed instantly.`
+          : `Booking request sent for ${nights} night${nights > 1 ? "s" : ""}!`
+      );
+
 
       // Fire-and-forget admin notification
       const { data: profile } = await supabase
