@@ -446,13 +446,39 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                               <MapPin className="w-3.5 h-3.5" /> {listing.city || "Unknown"}
                             </p>
-                            <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2 mt-3 flex-wrap">
                               <span className="text-sm font-medium text-foreground">${listing.price_per_night}/night</span>
                               <span className="text-muted-foreground">·</span>
                               <span className="text-sm text-muted-foreground">Max {listing.max_dogs} dogs</span>
+                              {(listing as any).booking_type === "instant" && (
+                                <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 text-amber-700">
+                                  <Zap className="w-3 h-3" /> Instant Book
+                                </Badge>
+                              )}
+                              {Number((listing as any).extra_dog_price) > 0 && (
+                                <Badge variant="outline" className="text-[10px]">+${(listing as any).extra_dog_price}/extra dog</Badge>
+                              )}
+                              {Number((listing as any).long_stay_discount_pct) > 0 && (listing as any).long_stay_min_nights && (
+                                <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700">
+                                  {(listing as any).long_stay_discount_pct}% at {(listing as any).long_stay_min_nights}+ nights
+                                </Badge>
+                              )}
+                              {Number((listing as any).repeat_guest_discount_pct) > 0 && (
+                                <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700">
+                                  {(listing as any).repeat_guest_discount_pct}% repeat guest
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col gap-2 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSettingsListing(listing)}
+                              title="Booking settings"
+                            >
+                              <Settings className="w-4 h-4 text-muted-foreground" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -470,6 +496,7 @@ const Dashboard = () => {
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                           </div>
+
                         </motion.div>
                       ))}
                     </div>
