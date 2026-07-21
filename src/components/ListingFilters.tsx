@@ -38,17 +38,18 @@ export interface FilterValues {
 
 interface ListingFiltersProps {
   onFilterChange: (filters: FilterValues) => void;
+  initialValues?: Partial<FilterValues>;
 }
 
-const ListingFilters = ({ onFilterChange }: ListingFiltersProps) => {
+const ListingFilters = ({ onFilterChange, initialValues }: ListingFiltersProps) => {
   const [expanded, setExpanded] = useState(false);
-  const [city, setCity] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
-  const [maxDogs, setMaxDogs] = useState<number | null>(null);
-  const [amenities, setAmenities] = useState<string[]>([]);
+  const [city, setCity] = useState(initialValues?.city ?? "");
+  const [priceRange, setPriceRange] = useState<[number, number]>(initialValues?.priceRange ?? [0, 200]);
+  const [maxDogs, setMaxDogs] = useState<number | null>(initialValues?.maxDogs ?? null);
+  const [amenities, setAmenities] = useState<string[]>(initialValues?.amenities ?? []);
   const [detectingLocation, setDetectingLocation] = useState(false);
-  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(initialValues?.center ?? null);
+  const [radiusKm, setRadiusKm] = useState<number | null>(initialValues?.radiusKm ?? null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const activeCount = [

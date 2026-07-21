@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ListingCard from "@/components/ListingCard";
 import ListingFilters, { FilterValues } from "@/components/ListingFilters";
+import SavedSearches from "@/components/SavedSearches";
 import HowItWorks from "@/components/HowItWorks";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
@@ -66,6 +67,9 @@ const Index = () => {
   });
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [appliedFilters, setAppliedFilters] = useState<Partial<FilterValues> | undefined>();
+  const [filtersKey, setFiltersKey] = useState(0);
+
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
@@ -249,9 +253,25 @@ const Index = () => {
           </motion.div>
 
           {/* Filters */}
-          <div className="mb-6">
-            <ListingFilters onFilterChange={setFilters} />
+          <div className="mb-4">
+            <ListingFilters
+              key={filtersKey}
+              initialValues={appliedFilters}
+              onFilterChange={setFilters}
+            />
           </div>
+
+          {/* Saved searches */}
+          <div className="mb-6">
+            <SavedSearches
+              currentFilters={filters}
+              onApply={(f) => {
+                setAppliedFilters(f);
+                setFiltersKey((k) => k + 1);
+              }}
+            />
+          </div>
+
 
           {/* Sort + view toggle + result count */}
           <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
