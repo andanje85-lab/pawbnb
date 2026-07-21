@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ListingCard from "@/components/ListingCard";
 import ListingFilters, { FilterValues } from "@/components/ListingFilters";
+import SavedSearches from "@/components/SavedSearches";
 import HowItWorks from "@/components/HowItWorks";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
