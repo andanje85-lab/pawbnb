@@ -67,6 +67,9 @@ const Index = () => {
   });
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [appliedFilters, setAppliedFilters] = useState<Partial<FilterValues> | undefined>();
+  const [filtersKey, setFiltersKey] = useState(0);
+
 
   const { data: dbListings, isLoading } = useQuery({
     queryKey: ["listings"],
