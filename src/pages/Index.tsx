@@ -253,9 +253,25 @@ const Index = () => {
           </motion.div>
 
           {/* Filters */}
-          <div className="mb-6">
-            <ListingFilters onFilterChange={setFilters} />
+          <div className="mb-4">
+            <ListingFilters
+              key={filtersKey}
+              initialValues={appliedFilters}
+              onFilterChange={setFilters}
+            />
           </div>
+
+          {/* Saved searches */}
+          <div className="mb-6">
+            <SavedSearches
+              currentFilters={filters}
+              onApply={(f) => {
+                setAppliedFilters(f);
+                setFiltersKey((k) => k + 1);
+              }}
+            />
+          </div>
+
 
           {/* Sort + view toggle + result count */}
           <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
