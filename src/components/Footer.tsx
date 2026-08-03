@@ -44,6 +44,21 @@ const Footer = () => {
             </ul>
           </div>
         </div>
+        <div className="border-t border-background/10 pt-8 mb-8">
+          <h4 className="font-semibold mb-3 text-sm">Dog boarding by city</h4>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-background/60">
+            {CITIES.map((c) => (
+              <Link
+                key={c.slug}
+                to={`/dog-boarding/${c.slug}`}
+                className="hover:text-background transition-colors"
+              >
+                Dog boarding in {c.name}, {c.state}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         <div className="border-t border-background/10 pt-6 text-center text-xs text-background/40">
           © 2026 PawBnB. All rights reserved.
         </div>
