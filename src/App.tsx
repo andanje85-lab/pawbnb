@@ -26,39 +26,43 @@ import GuestAssistant from "./components/GuestAssistant";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ScrollToHash />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/listing/:id" element={<ListingDetail />} />
-            <Route path="/create-listing" element={<CreateListing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<ProfileSettings />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/booking-success" element={<BookingSuccess />} />
-            <Route path="/insurance" element={<InfoPage />} />
-            <Route path="/insurance/claim" element={<InsuranceClaim />} />
-            <Route path="/host-resources" element={<InfoPage />} />
-            <Route path="/pricing" element={<InfoPage />} />
-            <Route path="/help-center" element={<InfoPage />} />
-            <Route path="/safety" element={<InfoPage />} />
-            <Route path="/contact" element={<InfoPage />} />
-            <Route path="/u/:userId" element={<PublicProfile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <GuestAssistant />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <ScrollToHash />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/listing/:id" element={<ListingDetail />} />
+              <Route path="/create-listing" element={<CreateListing />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<ProfileSettings />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/booking-success" element={<BookingSuccess />} />
+              <Route path="/insurance" element={<InfoPage />} />
+              <Route path="/insurance/claim" element={<InsuranceClaim />} />
+              <Route path="/host-resources" element={<InfoPage />} />
+              <Route path="/pricing" element={<InfoPage />} />
+              <Route path="/help-center" element={<InfoPage />} />
+              <Route path="/safety" element={<InfoPage />} />
+              <Route path="/contact" element={<InfoPage />} />
+              <Route path="/dog-boarding/:citySlug" element={<CityLanding />} />
+              <Route path="/u/:userId" element={<PublicProfile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <GuestAssistant />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
+
 
 export default App;
