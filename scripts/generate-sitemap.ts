@@ -2,8 +2,10 @@
 
 import { writeFileSync } from "fs"
 import { resolve } from "path"
+import { CITIES } from "../src/data/cities"
 
 const BASE_URL = "https://doggo-digs-home.lovable.app"
+
 
 interface SitemapEntry {
   path: string
