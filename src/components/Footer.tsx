@@ -1,11 +1,13 @@
 import { Dog } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CITIES } from "@/data/cities";
 
 const Footer = () => {
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -42,6 +44,21 @@ const Footer = () => {
             </ul>
           </div>
         </div>
+        <div className="border-t border-background/10 pt-8 mb-8">
+          <h4 className="font-semibold mb-3 text-sm">Dog boarding by city</h4>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-background/60">
+            {CITIES.map((c) => (
+              <Link
+                key={c.slug}
+                to={`/dog-boarding/${c.slug}`}
+                className="hover:text-background transition-colors"
+              >
+                Dog boarding in {c.name}, {c.state}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         <div className="border-t border-background/10 pt-6 text-center text-xs text-background/40">
           © 2026 PawBnB. All rights reserved.
         </div>

@@ -50,4 +50,34 @@
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/portland-or</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/austin-tx</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/denver-co</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/asheville-nc</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/scottsdale-az</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://doggo-digs-home.lovable.app/dog-boarding/malibu-ca</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
