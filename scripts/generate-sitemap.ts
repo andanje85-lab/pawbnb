@@ -24,7 +24,13 @@ const entries: SitemapEntry[] = [
   { path: "/help-center", changefreq: "monthly", priority: "0.6" },
   { path: "/safety", changefreq: "monthly", priority: "0.6" },
   { path: "/contact", changefreq: "yearly", priority: "0.5" },
+  ...CITIES.map((c) => ({
+    path: `/dog-boarding/${c.slug}`,
+    changefreq: "weekly" as const,
+    priority: "0.9",
+  })),
 ]
+
 
 function generateSitemap(entries: SitemapEntry[]) {
   const urls = entries.map((e) =>
