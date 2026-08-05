@@ -20,10 +20,18 @@ import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
 import InsuranceClaim from "./pages/InsuranceClaim";
 import PublicProfile from "./pages/PublicProfile";
+import Referrals from "./pages/Referrals";
 import ScrollToHash from "./components/ScrollToHash";
 import GuestAssistant from "./components/GuestAssistant";
+import { useReferralCapture } from "./hooks/useReferralCapture";
 
 const queryClient = new QueryClient();
+
+const ReferralCapture = () => {
+  useReferralCapture();
+  return null;
+};
+
 
 const App = () => (
   <HelmetProvider>
