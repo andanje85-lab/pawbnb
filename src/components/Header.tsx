@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare } from "lucide-react";
+import { Dog, Menu, X, Heart, User, LogOut, ShieldCheck, MessageSquare, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -120,9 +120,13 @@ const Header = () => {
                         <Button variant="outline" size="sm" className="w-full"><MessageSquare className="w-4 h-4 mr-1" />Messages</Button>
                       </Link>
                     </div>
+                    <Link to="/referrals">
+                      <Button variant="outline" size="sm" className="w-full gap-1"><Gift className="w-4 h-4" />Refer a friend</Button>
+                    </Link>
                     <Link to="/profile">
                       <Button variant="outline" size="sm" className="w-full">Profile</Button>
                     </Link>
+
                     {staffRole && (
                       <Link to="/admin">
                         <Button variant="outline" size="sm" className="w-full gap-1">
