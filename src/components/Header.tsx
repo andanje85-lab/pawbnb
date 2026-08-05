@@ -61,7 +61,9 @@ const Header = () => {
                   permissionState={permissionState}
                   onRequestPermission={requestPermission}
                 />
+                <Link to="/referrals"><Button variant="ghost" size="sm"><Gift className="w-4 h-4 mr-1" />Refer</Button></Link>
                 <Link to="/profile"><Button variant="ghost" size="sm">Profile</Button></Link>
+
                 {staffRole && (
                   <Link to="/admin">
                     <Button variant="ghost" size="sm" className="gap-1">
