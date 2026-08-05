@@ -20,10 +20,18 @@ import NotFound from "./pages/NotFound";
 import InfoPage from "./pages/InfoPage";
 import InsuranceClaim from "./pages/InsuranceClaim";
 import PublicProfile from "./pages/PublicProfile";
+import Referrals from "./pages/Referrals";
 import ScrollToHash from "./components/ScrollToHash";
 import GuestAssistant from "./components/GuestAssistant";
+import { useReferralCapture } from "./hooks/useReferralCapture";
 
 const queryClient = new QueryClient();
+
+const ReferralCapture = () => {
+  useReferralCapture();
+  return null;
+};
+
 
 const App = () => (
   <HelmetProvider>
@@ -34,6 +42,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ScrollToHash />
+            <ReferralCapture />
+
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -53,6 +63,8 @@ const App = () => (
               <Route path="/contact" element={<InfoPage />} />
               <Route path="/dog-boarding/:citySlug" element={<CityLanding />} />
               <Route path="/u/:userId" element={<PublicProfile />} />
+              <Route path="/referrals" element={<Referrals />} />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
