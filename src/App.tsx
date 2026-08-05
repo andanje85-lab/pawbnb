@@ -42,6 +42,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ScrollToHash />
+            <ReferralCapture />
+
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
