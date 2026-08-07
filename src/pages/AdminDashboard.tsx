@@ -385,6 +385,10 @@ const AdminDashboard = () => {
                     </span>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="metrics" className="gap-1.5">
+                  <BarChart2 className="w-3.5 h-3.5" />
+                  Metrics
+                </TabsTrigger>
                 <TabsTrigger value="revenue" className="gap-1.5">
                   <BarChart2 className="w-3.5 h-3.5" />
                   Revenue
