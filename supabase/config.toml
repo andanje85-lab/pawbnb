@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-review-reminders]
 verify_jwt = false
+
+[functions.send-host-digest]
+verify_jwt = false
