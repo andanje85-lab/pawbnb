@@ -279,6 +279,7 @@ const Dashboard = () => {
                 {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
                 {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
                 {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
+                {isHost && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="favorites">
