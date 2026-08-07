@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Star, Heart, Shield, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
+import { trackListingEvent } from "@/lib/analytics";
 
 interface ListingCardProps {
   id: string;
