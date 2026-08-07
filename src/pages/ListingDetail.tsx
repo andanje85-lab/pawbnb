@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { trackListingEvent } from "@/lib/analytics";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare, BadgeCheck } from "lucide-react";
