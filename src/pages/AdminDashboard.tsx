@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminMetrics } from "@/components/AdminMetrics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -385,6 +386,10 @@ const AdminDashboard = () => {
                     </span>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="metrics" className="gap-1.5">
+                  <BarChart2 className="w-3.5 h-3.5" />
+                  Metrics
+                </TabsTrigger>
                 <TabsTrigger value="revenue" className="gap-1.5">
                   <BarChart2 className="w-3.5 h-3.5" />
                   Revenue
@@ -412,6 +417,11 @@ const AdminDashboard = () => {
               <TabsContent value="claims">
                 <ClaimsTriage search={search} />
               </TabsContent>
+
+              <TabsContent value="metrics">
+                <AdminMetrics />
+              </TabsContent>
+
 
               {/* Revenue Tab */}
               <TabsContent value="revenue">

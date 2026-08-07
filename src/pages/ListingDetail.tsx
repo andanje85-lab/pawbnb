@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { trackListingEvent } from "@/lib/analytics";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Heart, Shield, MapPin, ArrowLeft, ChevronLeft, ChevronRight, Dog, Users, Calendar as CalendarIcon, MessageSquare, BadgeCheck } from "lucide-react";
@@ -86,6 +87,13 @@ const ListingDetail = () => {
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState(false);
   const [meetGreetAt, setMeetGreetAt] = useState<string>("");
+
+  // Record a listing page view for host analytics
+  useEffect(() => {
+    if (id) trackListingEvent(id, "view");
+  }, [id]);
+
+
 
   // Check if id looks like a UUID (database listing) or a slug (mock listing)
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;

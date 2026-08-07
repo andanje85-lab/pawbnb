@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Star, Heart, Shield, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
+import { trackListingEvent } from "@/lib/analytics";
 
 interface ListingCardProps {
   id: string;
@@ -24,6 +26,11 @@ const ListingCard = ({ id, image, title, location, rating, reviews, price, verif
   const { data: favIds } = useFavoriteIds();
   const toggle = useToggleFavorite();
   const liked = (favIds || []).includes(id);
+
+  // Count an appearance in search / browse results as an impression
+  useEffect(() => {
+    trackListingEvent(id, "impression");
+  }, [id]);
 
   const handleHeart = (e: React.MouseEvent) => {
     e.stopPropagation();

@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
+import { HostAnalytics } from "@/components/HostAnalytics";
 import FavoritesList from "@/components/FavoritesList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -279,6 +280,7 @@ const Dashboard = () => {
                 {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
                 {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
                 {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
+                {isHost && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="favorites">
@@ -294,6 +296,12 @@ const Dashboard = () => {
               {isHost && user && (
                 <TabsContent value="earnings">
                   <HostEarnings hostId={user.id} />
+                </TabsContent>
+              )}
+
+              {isHost && user && (
+                <TabsContent value="analytics">
+                  <HostAnalytics hostId={user.id} />
                 </TabsContent>
               )}
 
