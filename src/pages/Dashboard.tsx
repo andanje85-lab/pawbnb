@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
+import { HostAnalytics } from "@/components/HostAnalytics";
 import FavoritesList from "@/components/FavoritesList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
