@@ -27,6 +27,11 @@ const ListingCard = ({ id, image, title, location, rating, reviews, price, verif
   const toggle = useToggleFavorite();
   const liked = (favIds || []).includes(id);
 
+  // Count an appearance in search / browse results as an impression
+  useEffect(() => {
+    trackListingEvent(id, "impression");
+  }, [id]);
+
   const handleHeart = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
