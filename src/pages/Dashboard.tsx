@@ -298,6 +298,12 @@ const Dashboard = () => {
                 </TabsContent>
               )}
 
+              {isHost && user && (
+                <TabsContent value="analytics">
+                  <HostAnalytics hostId={user.id} />
+                </TabsContent>
+              )}
+
               {/* My Bookings Tab */}
               <TabsContent value="bookings">
                 {bookingsLoading ? (
