@@ -87,6 +87,13 @@ const ListingDetail = () => {
   const [booking, setBooking] = useState(false);
   const [meetGreetAt, setMeetGreetAt] = useState<string>("");
 
+  // Record a listing page view for host analytics
+  useEffect(() => {
+    if (id) trackListingEvent(id, "view");
+  }, [id]);
+
+
+
   // Check if id looks like a UUID (database listing) or a slug (mock listing)
   const isUuid = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
 
