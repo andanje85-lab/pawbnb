@@ -530,6 +530,25 @@ const Dashboard = () => {
                                   </>
                                 )}
                               </div>
+                              {(() => {
+                                const myMod = (myModifications || []).find((m: any) => m.booking_id === booking.id);
+                                if (!myMod) return null;
+                                const colors: Record<string, string> = {
+                                  pending: "bg-yellow-50 border-yellow-200 text-yellow-800",
+                                  approved: "bg-green-50 border-green-200 text-green-800",
+                                  declined: "bg-red-50 border-red-200 text-red-800",
+                                  cancelled: "bg-muted border-border text-muted-foreground",
+                                };
+                                return (
+                                  <div className={`mt-3 rounded-md border px-3 py-2 text-xs ${colors[myMod.status] || ""}`}>
+                                    <span className="font-medium capitalize">Date change {myMod.status}:</span>{" "}
+                                    {new Date(myMod.original_check_in).toLocaleDateString()} → {new Date(myMod.original_check_out).toLocaleDateString()}{" "}
+                                    changed to {new Date(myMod.requested_check_in).toLocaleDateString()} → {new Date(myMod.requested_check_out).toLocaleDateString()}{" "}
+                                    (${Number(myMod.requested_total_price).toFixed(2)})
+                                    {myMod.host_response && <span className="block mt-1 italic opacity-80">"{myMod.host_response}"</span>}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                           {reviewingBookingId === booking.id && (
