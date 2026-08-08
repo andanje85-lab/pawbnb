@@ -512,6 +512,14 @@ const Dashboard = () => {
                                     </Button>
                                     <Button
                                       size="sm"
+                                      variant="outline"
+                                      onClick={() => setModifyBooking(booking)}
+                                    >
+                                      <CalendarDays className="w-3.5 h-3.5 mr-1" />
+                                      Change Dates
+                                    </Button>
+                                    <Button
+                                      size="sm"
                                       variant="ghost"
                                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                       onClick={() => setCancelBookingId(booking.id)}
