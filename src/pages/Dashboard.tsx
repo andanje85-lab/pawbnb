@@ -906,6 +906,45 @@ const Dashboard = () => {
   );
 };
 
+const ResolveModificationDialog = ({
+  action, onClose, onConfirm,
+}: {
+  action: "approve" | "decline";
+  onClose: () => void;
+  onConfirm: (note: string) => void;
+}) => {
+  const [note, setNote] = useState("");
+  return (
+    <AlertDialog open onOpenChange={(o) => !o && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{action === "approve" ? "Approve date change?" : "Decline date change?"}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {action === "approve"
+              ? "The booking's dates and total will be updated to the guest's requested values."
+              : "The booking will stay as-is. Add an optional note for the guest."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Textarea
+          rows={3}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={action === "approve" ? "Optional note for the guest..." : "Reason for declining (optional)..."}
+        />
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className={action === "approve" ? "" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
+            onClick={() => onConfirm(note)}
+          >
+            {action === "approve" ? "Approve" : "Decline"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+
 const LoadingCards = () => (
   <div className="space-y-4">
     {[1, 2, 3].map((i) => (
