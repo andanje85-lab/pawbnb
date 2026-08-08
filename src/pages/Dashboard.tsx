@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
+import BookingModificationDialog from "@/components/BookingModificationDialog";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
 import { HostAnalytics } from "@/components/HostAnalytics";
@@ -13,6 +14,7 @@ import FavoritesList from "@/components/FavoritesList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -47,6 +49,8 @@ const Dashboard = () => {
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const [settingsListing, setSettingsListing] = useState<any>(null);
+  const [modifyBooking, setModifyBooking] = useState<any | null>(null);
+  const [modResolve, setModResolve] = useState<{ id: string; action: "approve" | "decline"; note: string } | null>(null);
   const activeTab = searchParams.get("tab") || "bookings";
 
   // Fetch profile to check host status
@@ -125,6 +129,41 @@ const Dashboard = () => {
       }
       const profileMap = Object.fromEntries((guestProfiles || []).map((p) => [p.user_id, p]));
       return (data || []).map((b) => ({ ...b, guestProfile: profileMap[b.guest_id] }));
+    },
+    enabled: !!user && !!profile?.is_host,
+  });
+
+  // Fetch guest's own modification requests (to show inline status)
+  const { data: myModifications } = useQuery({
+    queryKey: ["my-modifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("booking_modifications")
+        .select("*, bookings!inner(guest_id)")
+        .eq("bookings.guest_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch modification requests for the host's listings
+  const { data: hostModifications, isLoading: hostModsLoading } = useQuery({
+    queryKey: ["host-modifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("booking_modifications")
+        .select("*, bookings!inner(listing_id, guest_id, number_of_dogs, listings!inner(title, city, host_id))")
+        .eq("bookings.listings.host_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = [...new Set((data || []).map((m: any) => m.bookings.guest_id))];
+      const { data: profiles } = await supabase
+        .from("profiles").select("user_id, full_name").in("user_id", ids as string[]);
+      const map: Record<string, string> = {};
+      (profiles || []).forEach((p) => { map[p.user_id] = p.full_name || "Unknown"; });
+      return (data || []).map((m: any) => ({ ...m, guestName: map[m.bookings.guest_id] || "Unknown" }));
     },
     enabled: !!user && !!profile?.is_host,
   });
@@ -254,6 +293,99 @@ const Dashboard = () => {
     setCancelBookingId(null);
   };
 
+  const resolveModification = async (modId: string, action: "approve" | "decline", hostNote: string) => {
+    setModResolve(null);
+    // Fetch the modification record (with booking + listing) using service-restricted join
+    const { data: mod, error: modErr } = await (supabase as any)
+      .from("booking_modifications")
+      .select("*, bookings!inner(listing_id, guest_id, number_of_dogs, listings!inner(host_id, title, city))")
+      .eq("id", modId)
+      .maybeSingle();
+    if (modErr || !mod) {
+      toast.error("Could not load modification request");
+      return;
+    }
+    if (mod.status !== "pending") {
+      toast.error("This request has already been resolved");
+      queryClient.invalidateQueries({ queryKey: ["host-modifications"] });
+      return;
+    }
+
+    const booking = mod.bookings;
+    const listing = booking.listings;
+
+    const { error: updErr } = await (supabase as any)
+      .from("booking_modifications")
+      .update({
+        status: action === "approve" ? "approved" : "declined",
+        host_response: hostNote || null,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", modId)
+      .eq("status", "pending");
+    if (updErr) {
+      toast.error("Failed to update request");
+      return;
+    }
+
+    if (action === "approve") {
+      // Apply new dates + price to the booking
+      const { error: bkErr } = await supabase
+        .from("bookings")
+        .update({
+          check_in: mod.requested_check_in,
+          check_out: mod.requested_check_out,
+          total_price: mod.requested_total_price,
+        })
+        .eq("id", booking.id);
+      if (bkErr) {
+        toast.error("Request approved, but booking dates could not be updated. Update manually.");
+      } else {
+        toast.success("Date change approved — booking updated");
+      }
+    } else {
+      toast.success("Date change declined");
+    }
+
+    // Notify the guest in-app
+    await supabase.from("notifications").insert({
+      user_id: booking.guest_id,
+      title: `📅 Date change ${action === "approve" ? "approved" : "declined"} — ${listing?.title || "your booking"}`,
+      body: action === "approve"
+        ? `${mod.requested_check_in} → ${mod.requested_check_out} · $${Number(mod.requested_total_price).toFixed(2)}`
+        : (hostNote || "Your host declined the requested date change."),
+      type: "modification",
+      reference_id: booking.id,
+    });
+
+    // Best-effort email to guest
+    try {
+      await supabase.functions.invoke("send-booking-notification", {
+        body: {
+          type: action === "approve" ? "modification_approved" : "modification_declined",
+          bookingId: booking.id,
+          guestId: booking.guest_id,
+          hostId: listing?.host_id,
+          listingTitle: listing?.title || "your booking",
+          listingCity: listing?.city || "",
+          checkIn: mod.requested_check_in,
+          checkOut: mod.requested_check_out,
+          originalCheckIn: mod.original_check_in,
+          originalCheckOut: mod.original_check_out,
+          numDogs: booking.number_of_dogs,
+          totalPrice: Number(mod.requested_total_price).toFixed(2),
+          guestName: "",
+          message: hostNote || "",
+        },
+      });
+    } catch {}
+
+    queryClient.invalidateQueries({ queryKey: ["host-modifications"] });
+    queryClient.invalidateQueries({ queryKey: ["my-modifications"] });
+    queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+  };
+
   const getListingPhoto = (listing: any) => {
     const photos = (listing?.listing_photos || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
     return photos[0]?.url || listing1;
@@ -381,6 +513,14 @@ const Dashboard = () => {
                                     </Button>
                                     <Button
                                       size="sm"
+                                      variant="outline"
+                                      onClick={() => setModifyBooking(booking)}
+                                    >
+                                      <CalendarDays className="w-3.5 h-3.5 mr-1" />
+                                      Change Dates
+                                    </Button>
+                                    <Button
+                                      size="sm"
                                       variant="ghost"
                                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                       onClick={() => setCancelBookingId(booking.id)}
@@ -391,6 +531,25 @@ const Dashboard = () => {
                                   </>
                                 )}
                               </div>
+                              {(() => {
+                                const myMod = (myModifications || []).find((m: any) => m.booking_id === booking.id);
+                                if (!myMod) return null;
+                                const colors: Record<string, string> = {
+                                  pending: "bg-yellow-50 border-yellow-200 text-yellow-800",
+                                  approved: "bg-green-50 border-green-200 text-green-800",
+                                  declined: "bg-red-50 border-red-200 text-red-800",
+                                  cancelled: "bg-muted border-border text-muted-foreground",
+                                };
+                                return (
+                                  <div className={`mt-3 rounded-md border px-3 py-2 text-xs ${colors[myMod.status] || ""}`}>
+                                    <span className="font-medium capitalize">Date change {myMod.status}:</span>{" "}
+                                    {new Date(myMod.original_check_in).toLocaleDateString()} → {new Date(myMod.original_check_out).toLocaleDateString()}{" "}
+                                    changed to {new Date(myMod.requested_check_in).toLocaleDateString()} → {new Date(myMod.requested_check_out).toLocaleDateString()}{" "}
+                                    (${Number(myMod.requested_total_price).toFixed(2)})
+                                    {myMod.host_response && <span className="block mt-1 italic opacity-80">"{myMod.host_response}"</span>}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                           {reviewingBookingId === booking.id && (
@@ -590,6 +749,75 @@ const Dashboard = () => {
                       })}
                     </div>
                   )}
+
+                  {/* Date Change Requests */}
+                  {isHost && (
+                    <div className="mt-8">
+                      <h2 className="font-serif text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4" /> Date Change Requests
+                      </h2>
+                      {hostModsLoading ? (
+                        <LoadingCards />
+                      ) : !hostModifications || hostModifications.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-xl">
+                          No date-change requests yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {hostModifications.map((mod: any) => {
+                            const bk = mod.bookings;
+                            const priceDiff = Number(mod.requested_total_price) - Number(mod.original_total_price);
+                            const modColors: Record<string, string> = {
+                              pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                              approved: "bg-green-100 text-green-800 border-green-200",
+                              declined: "bg-red-100 text-red-800 border-red-200",
+                              cancelled: "bg-muted text-muted-foreground border-border",
+                            };
+                            return (
+                              <motion.div key={mod.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-4 rounded-xl border border-border bg-card">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div>
+                                    <h3 className="font-serif font-bold text-foreground text-sm">{bk?.listings?.title}</h3>
+                                    <p className="text-xs text-muted-foreground">Guest: {mod.guestName} · {format(new Date(mod.created_at), "MMM d, yyyy")}</p>
+                                  </div>
+                                  <Badge variant="outline" className={`${modColors[mod.status] || ""} text-xs capitalize`}>{mod.status}</Badge>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
+                                  <span className="line-through text-muted-foreground">
+                                    {new Date(mod.original_check_in).toLocaleDateString()} → {new Date(mod.original_check_out).toLocaleDateString()} (${Number(mod.original_total_price).toFixed(2)})
+                                  </span>
+                                  <span className="text-muted-foreground">→</span>
+                                  <span className="font-medium">
+                                    {new Date(mod.requested_check_in).toLocaleDateString()} → {new Date(mod.requested_check_out).toLocaleDateString()} (${Number(mod.requested_total_price).toFixed(2)})
+                                  </span>
+                                  <Badge variant="outline" className={priceDiff > 0 ? "border-amber-300 text-amber-700" : "border-emerald-300 text-emerald-700"}>
+                                    {priceDiff > 0 ? `+$${priceDiff.toFixed(2)}` : priceDiff < 0 ? `−$${Math.abs(priceDiff).toFixed(2)}` : "No change"}
+                                  </Badge>
+                                </div>
+                                {mod.reason && <p className="text-sm text-muted-foreground italic mb-2">"{mod.reason}"</p>}
+                                {mod.host_response && (
+                                  <p className="text-xs text-muted-foreground bg-muted/40 rounded-md p-2 mb-2">
+                                    <span className="font-medium">Your response:</span> {mod.host_response}
+                                  </p>
+                                )}
+                                {mod.status === "pending" && (
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => setModResolve({ id: mod.id, action: "approve", note: "" })}>
+                                      Approve
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => setModResolve({ id: mod.id, action: "decline", note: "" })}>
+                                      Decline
+                                    </Button>
+                                  </div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
               )}
             </Tabs>
@@ -603,6 +831,22 @@ const Dashboard = () => {
           listing={settingsListing}
           open={!!settingsListing}
           onOpenChange={(o) => !o && setSettingsListing(null)}
+        />
+      )}
+
+      <BookingModificationDialog
+        booking={modifyBooking}
+        open={!!modifyBooking}
+        onOpenChange={(o) => !o && setModifyBooking(null)}
+        onSubmitted={() => queryClient.invalidateQueries({ queryKey: ["my-modifications"] })}
+      />
+
+      {/* Modification Resolve Dialog */}
+      {modResolve && (
+        <ResolveModificationDialog
+          action={modResolve.action}
+          onClose={() => setModResolve(null)}
+          onConfirm={(note) => resolveModification(modResolve.id, modResolve.action, note)}
         />
       )}
 
@@ -660,6 +904,45 @@ const Dashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+};
+
+const ResolveModificationDialog = ({
+  action, onClose, onConfirm,
+}: {
+  action: "approve" | "decline";
+  onClose: () => void;
+  onConfirm: (note: string) => void;
+}) => {
+  const [note, setNote] = useState("");
+  return (
+    <AlertDialog open onOpenChange={(o) => !o && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{action === "approve" ? "Approve date change?" : "Decline date change?"}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {action === "approve"
+              ? "The booking's dates and total will be updated to the guest's requested values."
+              : "The booking will stay as-is. Add an optional note for the guest."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Textarea
+          rows={3}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={action === "approve" ? "Optional note for the guest..." : "Reason for declining (optional)..."}
+        />
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className={action === "approve" ? "" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
+            onClick={() => onConfirm(note)}
+          >
+            {action === "approve" ? "Approve" : "Decline"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

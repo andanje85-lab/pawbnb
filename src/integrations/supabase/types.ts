@@ -41,6 +41,68 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_modifications: {
+        Row: {
+          booking_id: string
+          created_at: string
+          host_response: string | null
+          id: string
+          original_check_in: string
+          original_check_out: string
+          original_total_price: number
+          reason: string | null
+          requested_by: string
+          requested_check_in: string
+          requested_check_out: string
+          requested_total_price: number
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          host_response?: string | null
+          id?: string
+          original_check_in: string
+          original_check_out: string
+          original_total_price: number
+          reason?: string | null
+          requested_by: string
+          requested_check_in: string
+          requested_check_out: string
+          requested_total_price: number
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          host_response?: string | null
+          id?: string
+          original_check_in?: string
+          original_check_out?: string
+          original_total_price?: number
+          reason?: string | null
+          requested_by?: string
+          requested_check_in?: string
+          requested_check_out?: string
+          requested_total_price?: number
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_modifications_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           cancellation_reason: string | null

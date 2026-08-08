@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      type, // "new_booking" | "new_booking_host" | "booking_submitted" | "booking_confirmed" | "booking_declined"
+      type, // "new_booking" | "new_booking_host" | "booking_submitted" | "booking_confirmed" | "booking_declined" | "modification_requested" | "modification_approved" | "modification_declined"
       bookingId,
       guestId,
       listingTitle,
@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
       guestName,
       message,
       hostId,
+      originalCheckIn,
+      originalCheckOut,
     } = body;
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -191,6 +193,91 @@ Deno.serve(async (req) => {
           </div>
 
           <p style="color: #444;">Don't be discouraged — there are plenty of other great hosts available. We hope to find the perfect match for your pup soon! 🐕</p>
+          <p style="color: #888; font-size: 13px; margin-top: 32px;">Booking ID: ${bookingId}</p>
+        </div>
+      `;
+    } else if (type === "modification_requested") {
+      // Email to host — guest requested a date change
+      let hostEmail = "";
+      if (hostId) {
+        const { data: hostUser } = await supabaseAdmin.auth.admin.getUserById(hostId);
+        hostEmail = hostUser?.user?.email || "";
+      }
+      if (!hostEmail) {
+        return new Response(JSON.stringify({ error: "Host email not found" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      toEmail = hostEmail;
+      subject = `📅 Date change requested — ${listingTitle}`;
+      emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #1a1a1a; margin-bottom: 4px;">📅 Date Change Requested</h2>
+          <p style="color: #444; margin-top: 4px;">A guest has asked to change the dates of their booking. Please review and approve or decline in your dashboard.</p>
+
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 16px 0;">📋 Request Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #555; width: 160px;"><strong>Listing</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${listingTitle}${listingCity ? ` — ${listingCity}` : ""}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Original dates</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${originalCheckIn} → ${originalCheckOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Requested dates</strong></td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">${checkIn} → ${checkOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Dogs</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${numDogs}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>New total</strong></td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">$${totalPrice}</td></tr>
+            </table>
+          </div>
+
+          ${message ? `<div style="background: #f0f7ff; border-radius: 12px; padding: 16px; margin: 16px 0;"><strong style="color:#1a1a1a;">Guest note:</strong> <span style="color:#444;">${message}</span></div>` : ""}
+
+          <p style="color: #444;">Log in to your dashboard's Booking Requests tab to approve or decline this change.</p>
+          <p style="color: #888; font-size: 13px; margin-top: 32px;">Booking ID: ${bookingId}</p>
+        </div>
+      `;
+    } else if (type === "modification_approved") {
+      // Email to guest — host approved the date change
+      toEmail = guestEmail;
+      subject = `✅ Date change approved — ${listingTitle}`;
+      emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #1a1a1a; margin-bottom: 4px;">✅ Date Change Approved!</h2>
+          <p style="color: #444; margin-top: 4px;">Hi ${guestName || "there"}, your host has approved your requested date change. Your booking has been updated.</p>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #166534; margin: 0 0 16px 0;">📋 Updated Booking</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #555; width: 160px;"><strong>Listing</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${listingTitle}${listingCity ? ` — ${listingCity}` : ""}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Previous dates</strong></td><td style="padding: 6px 0; color: #6b7280; text-decoration: line-through;">${originalCheckIn} → ${originalCheckOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>New dates</strong></td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">${checkIn} → ${checkOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Dogs</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${numDogs}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Total</strong></td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">$${totalPrice}</td></tr>
+            </table>
+          </div>
+
+          ${message ? `<p style="color:#444; font-style:italic;">Note from your host: ${message}</p>` : ""}
+          <p style="color: #444; margin-top: 16px;">We look forward to welcoming your pup! 🐕</p>
+          <p style="color: #888; font-size: 13px; margin-top: 32px;">Booking ID: ${bookingId}</p>
+        </div>
+      `;
+    } else if (type === "modification_declined") {
+      // Email to guest — host declined the date change
+      toEmail = guestEmail;
+      subject = `Date change declined — ${listingTitle}`;
+      emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #1a1a1a; margin-bottom: 4px;">Date Change Update</h2>
+          <p style="color: #444; margin-top: 4px;">Hi ${guestName || "there"}, your host was unable to accommodate your requested date change. Your original booking remains unchanged.</p>
+
+          <div style="background: #fff5f5; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #991b1b; margin: 0 0 16px 0;">📋 Original Booking (Unchanged)</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #555; width: 160px;"><strong>Listing</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${listingTitle}${listingCity ? ` — ${listingCity}` : ""}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Dates</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${originalCheckIn} → ${originalCheckOut}</td></tr>
+              <tr><td style="padding: 6px 0; color: #555;"><strong>Dogs</strong></td><td style="padding: 6px 0; color: #1a1a1a;">${numDogs}</td></tr>
+            </table>
+          </div>
+
+          ${message ? `<p style="color:#444; font-style:italic;">Note from your host: ${message}</p>` : ""}
+          <p style="color: #444; margin-top: 16px;">You can message your host directly to discuss alternative dates.</p>
           <p style="color: #888; font-size: 13px; margin-top: 32px;">Booking ID: ${bookingId}</p>
         </div>
       `;
