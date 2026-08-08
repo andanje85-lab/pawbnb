@@ -132,6 +132,41 @@ const Dashboard = () => {
     enabled: !!user && !!profile?.is_host,
   });
 
+  // Fetch guest's own modification requests (to show inline status)
+  const { data: myModifications } = useQuery({
+    queryKey: ["my-modifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("booking_modifications")
+        .select("*, bookings!inner(guest_id)")
+        .eq("bookings.guest_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch modification requests for the host's listings
+  const { data: hostModifications, isLoading: hostModsLoading } = useQuery({
+    queryKey: ["host-modifications", user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("booking_modifications")
+        .select("*, bookings!inner(listing_id, guest_id, number_of_dogs, listings!inner(title, city, host_id))")
+        .eq("bookings.listings.host_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = [...new Set((data || []).map((m: any) => m.bookings.guest_id))];
+      const { data: profiles } = await supabase
+        .from("profiles").select("user_id, full_name").in("user_id", ids as string[]);
+      const map: Record<string, string> = {};
+      (profiles || []).forEach((p) => { map[p.user_id] = p.full_name || "Unknown"; });
+      return (data || []).map((m: any) => ({ ...m, guestName: map[m.bookings.guest_id] || "Unknown" }));
+    },
+    enabled: !!user && !!profile?.is_host,
+  });
+
   if (authLoading) return null;
 
   if (!user) {
