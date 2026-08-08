@@ -292,6 +292,99 @@ const Dashboard = () => {
     setCancelBookingId(null);
   };
 
+  const resolveModification = async (modId: string, action: "approve" | "decline", hostNote: string) => {
+    setModResolve(null);
+    // Fetch the modification record (with booking + listing) using service-restricted join
+    const { data: mod, error: modErr } = await (supabase as any)
+      .from("booking_modifications")
+      .select("*, bookings!inner(listing_id, guest_id, number_of_dogs, listings!inner(host_id, title, city))")
+      .eq("id", modId)
+      .maybeSingle();
+    if (modErr || !mod) {
+      toast.error("Could not load modification request");
+      return;
+    }
+    if (mod.status !== "pending") {
+      toast.error("This request has already been resolved");
+      queryClient.invalidateQueries({ queryKey: ["host-modifications"] });
+      return;
+    }
+
+    const booking = mod.bookings;
+    const listing = booking.listings;
+
+    const { error: updErr } = await (supabase as any)
+      .from("booking_modifications")
+      .update({
+        status: action === "approve" ? "approved" : "declined",
+        host_response: hostNote || null,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", modId)
+      .eq("status", "pending");
+    if (updErr) {
+      toast.error("Failed to update request");
+      return;
+    }
+
+    if (action === "approve") {
+      // Apply new dates + price to the booking
+      const { error: bkErr } = await supabase
+        .from("bookings")
+        .update({
+          check_in: mod.requested_check_in,
+          check_out: mod.requested_check_out,
+          total_price: mod.requested_total_price,
+        })
+        .eq("id", booking.id);
+      if (bkErr) {
+        toast.error("Request approved, but booking dates could not be updated. Update manually.");
+      } else {
+        toast.success("Date change approved — booking updated");
+      }
+    } else {
+      toast.success("Date change declined");
+    }
+
+    // Notify the guest in-app
+    await supabase.from("notifications").insert({
+      user_id: booking.guest_id,
+      title: `📅 Date change ${action === "approve" ? "approved" : "declined"} — ${listing?.title || "your booking"}`,
+      body: action === "approve"
+        ? `${mod.requested_check_in} → ${mod.requested_check_out} · $${Number(mod.requested_total_price).toFixed(2)}`
+        : (hostNote || "Your host declined the requested date change."),
+      type: "modification",
+      reference_id: booking.id,
+    });
+
+    // Best-effort email to guest
+    try {
+      await supabase.functions.invoke("send-booking-notification", {
+        body: {
+          type: action === "approve" ? "modification_approved" : "modification_declined",
+          bookingId: booking.id,
+          guestId: booking.guest_id,
+          hostId: listing?.host_id,
+          listingTitle: listing?.title || "your booking",
+          listingCity: listing?.city || "",
+          checkIn: mod.requested_check_in,
+          checkOut: mod.requested_check_out,
+          originalCheckIn: mod.original_check_in,
+          originalCheckOut: mod.original_check_out,
+          numDogs: booking.number_of_dogs,
+          totalPrice: Number(mod.requested_total_price).toFixed(2),
+          guestName: "",
+          message: hostNote || "",
+        },
+      });
+    } catch {}
+
+    queryClient.invalidateQueries({ queryKey: ["host-modifications"] });
+    queryClient.invalidateQueries({ queryKey: ["my-modifications"] });
+    queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+  };
+
   const getListingPhoto = (listing: any) => {
     const photos = (listing?.listing_photos || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
     return photos[0]?.url || listing1;
