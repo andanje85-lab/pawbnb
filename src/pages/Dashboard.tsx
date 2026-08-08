@@ -748,8 +748,76 @@ const Dashboard = () => {
                       })}
                     </div>
                   )}
+
+                  {/* Date Change Requests */}
+                  {isHost && (
+                    <div className="mt-8">
+                      <h2 className="font-serif text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4" /> Date Change Requests
+                      </h2>
+                      {hostModsLoading ? (
+                        <LoadingCards />
+                      ) : !hostModifications || hostModifications.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-xl">
+                          No date-change requests yet.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {hostModifications.map((mod: any) => {
+                            const bk = mod.bookings;
+                            const priceDiff = Number(mod.requested_total_price) - Number(mod.original_total_price);
+                            const modColors: Record<string, string> = {
+                              pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                              approved: "bg-green-100 text-green-800 border-green-200",
+                              declined: "bg-red-100 text-red-800 border-red-200",
+                              cancelled: "bg-muted text-muted-foreground border-border",
+                            };
+                            return (
+                              <motion.div key={mod.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                className="p-4 rounded-xl border border-border bg-card">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div>
+                                    <h3 className="font-serif font-bold text-foreground text-sm">{bk?.listings?.title}</h3>
+                                    <p className="text-xs text-muted-foreground">Guest: {mod.guestName} · {format(new Date(mod.created_at), "MMM d, yyyy")}</p>
+                                  </div>
+                                  <Badge variant="outline" className={`${modColors[mod.status] || ""} text-xs capitalize`}>{mod.status}</Badge>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
+                                  <span className="line-through text-muted-foreground">
+                                    {new Date(mod.original_check_in).toLocaleDateString()} → {new Date(mod.original_check_out).toLocaleDateString()} (${Number(mod.original_total_price).toFixed(2)})
+                                  </span>
+                                  <span className="text-muted-foreground">→</span>
+                                  <span className="font-medium">
+                                    {new Date(mod.requested_check_in).toLocaleDateString()} → {new Date(mod.requested_check_out).toLocaleDateString()} (${Number(mod.requested_total_price).toFixed(2)})
+                                  </span>
+                                  <Badge variant="outline" className={priceDiff > 0 ? "border-amber-300 text-amber-700" : "border-emerald-300 text-emerald-700"}>
+                                    {priceDiff > 0 ? `+$${priceDiff.toFixed(2)}` : priceDiff < 0 ? `−$${Math.abs(priceDiff).toFixed(2)}` : "No change"}
+                                  </Badge>
+                                </div>
+                                {mod.reason && <p className="text-sm text-muted-foreground italic mb-2">"{mod.reason}"</p>}
+                                {mod.host_response && (
+                                  <p className="text-xs text-muted-foreground bg-muted/40 rounded-md p-2 mb-2">
+                                    <span className="font-medium">Your response:</span> {mod.host_response}
+                                  </p>
+                                )}
+                                {mod.status === "pending" && (
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => setModResolve({ id: mod.id, action: "approve", note: "" })}>
+                                      Approve
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => setModResolve({ id: mod.id, action: "decline", note: "" })}>
+                                      Decline
+                                    </Button>
+                                  </div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
-              )}
             </Tabs>
           </motion.div>
         </div>
