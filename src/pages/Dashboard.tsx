@@ -833,6 +833,22 @@ const Dashboard = () => {
         />
       )}
 
+      <BookingModificationDialog
+        booking={modifyBooking}
+        open={!!modifyBooking}
+        onOpenChange={(o) => !o && setModifyBooking(null)}
+        onSubmitted={() => queryClient.invalidateQueries({ queryKey: ["my-modifications"] })}
+      />
+
+      {/* Modification Resolve Dialog */}
+      {modResolve && (
+        <ResolveModificationDialog
+          action={modResolve.action}
+          onClose={() => setModResolve(null)}
+          onConfirm={(note) => resolveModification(modResolve.id, modResolve.action, note)}
+        />
+      )}
+
 
 
       {/* Cancel Booking Confirmation Dialog */}
