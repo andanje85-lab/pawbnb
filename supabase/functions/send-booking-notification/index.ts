@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      type, // "new_booking" | "new_booking_host" | "booking_submitted" | "booking_confirmed" | "booking_declined"
+      type, // "new_booking" | "new_booking_host" | "booking_submitted" | "booking_confirmed" | "booking_declined" | "modification_requested" | "modification_approved" | "modification_declined"
       bookingId,
       guestId,
       listingTitle,
@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
       guestName,
       message,
       hostId,
+      originalCheckIn,
+      originalCheckOut,
     } = body;
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
