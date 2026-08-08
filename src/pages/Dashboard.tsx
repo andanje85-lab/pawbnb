@@ -48,6 +48,8 @@ const Dashboard = () => {
   const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
   const [settingsListing, setSettingsListing] = useState<any>(null);
+  const [modifyBooking, setModifyBooking] = useState<any | null>(null);
+  const [modResolve, setModResolve] = useState<{ id: string; action: "approve" | "decline"; note: string } | null>(null);
   const activeTab = searchParams.get("tab") || "bookings";
 
   // Fetch profile to check host status
