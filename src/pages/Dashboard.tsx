@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
+import BookingModificationDialog from "@/components/BookingModificationDialog";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
 import { HostAnalytics } from "@/components/HostAnalytics";
