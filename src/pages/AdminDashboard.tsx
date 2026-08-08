@@ -427,6 +427,10 @@ const AdminDashboard = () => {
                 <AdminMetrics />
               </TabsContent>
 
+              <TabsContent value="cohorts">
+                <CohortAnalytics />
+              </TabsContent>
+
 
               {/* Revenue Tab */}
               <TabsContent value="revenue">
