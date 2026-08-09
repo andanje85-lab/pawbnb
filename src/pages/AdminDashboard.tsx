@@ -660,7 +660,11 @@ const AdminDashboard = () => {
               {/* Users Tab (Admin only) */}
               {myRole === "admin" && (
                 <TabsContent value="users">
-                  <div className="flex justify-end mb-4">
+                  <div className="flex flex-wrap justify-end gap-2 mb-4">
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => navigate("/admin/roles")}>
+                      <UserCog className="w-4 h-4" />
+                      Manage Staff & Roles
+                    </Button>
                     <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-2">
                       <Mail className="w-4 h-4" />
                       Invite Staff by Email
