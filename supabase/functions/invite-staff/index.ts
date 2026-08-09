@@ -51,7 +51,14 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { email } = await req.json();
+    const { email, role: requestedRole } = await req.json();
+    const role = requestedRole ?? "worker";
+    if (role !== "worker" && role !== "admin") {
+      return new Response(JSON.stringify({ error: "Role must be 'worker' or 'admin'" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email is required" }), {
         status: 400,
@@ -103,10 +110,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Assign worker role
+    // Assign requested staff role
     const { error: roleError } = await adminClient
       .from("user_roles")
-      .insert({ user_id: targetUserId, role: "worker" });
+      .insert({ user_id: targetUserId, role });
 
     if (roleError) {
       return new Response(JSON.stringify({ error: roleError.message }), {
@@ -115,13 +122,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    await adminClient.from("audit_logs").insert({
+      action: existingUser ? "role_assigned" : "staff_invited",
+      actor_id: user.id,
+      target_user_id: targetUserId,
+      role,
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
         invited: !existingUser,
         message: existingUser
-          ? "Worker role assigned to existing user."
-          : "Invitation sent and worker role assigned.",
+          ? `${role === "admin" ? "Admin" : "Worker"} role assigned to existing user.`
+          : `Invitation sent and ${role} role assigned.`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

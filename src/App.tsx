@@ -22,6 +22,7 @@ import InsuranceClaim from "./pages/InsuranceClaim";
 import PublicProfile from "./pages/PublicProfile";
 import Referrals from "./pages/Referrals";
 import AdminSetup from "./pages/AdminSetup";
+import RoleManagement from "./pages/RoleManagement";
 import ScrollToHash from "./components/ScrollToHash";
 import GuestAssistant from "./components/GuestAssistant";
 import { useReferralCapture } from "./hooks/useReferralCapture";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<ProfileSettings />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/roles" element={<RoleManagement />} />
               <Route path="/admin-setup" element={<AdminSetup />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/booking-success" element={<BookingSuccess />} />
