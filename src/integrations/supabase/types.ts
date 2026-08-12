@@ -212,6 +212,33 @@ export type Database = {
           },
         ]
       }
+      function_errors: {
+        Row: {
+          context: Json
+          created_at: string
+          function_name: string
+          id: string
+          message: string
+          stack: string | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          function_name: string
+          id?: string
+          message: string
+          stack?: string | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          function_name?: string
+          id?: string
+          message?: string
+          stack?: string | null
+        }
+        Relationships: []
+      }
       insurance_claims: {
         Row: {
           amount_requested: number | null
@@ -777,6 +804,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      purge_old_function_errors: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "worker"
