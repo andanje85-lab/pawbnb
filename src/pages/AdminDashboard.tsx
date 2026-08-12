@@ -23,6 +23,8 @@ import {
   UserPlus, UserMinus, DollarSign, TrendingUp, Download, User, Phone, BarChart2, Flag, ShieldAlert
 } from "lucide-react";
 import { ReportsTriage, ClaimsTriage } from "@/components/AdminTriage";
+import { ErrorMonitor } from "@/components/ErrorMonitor";
+
 import { format, formatDistanceToNow } from "date-fns";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -414,6 +416,12 @@ const AdminDashboard = () => {
                     Audit Log
                   </TabsTrigger>
                 )}
+                {myRole === "admin" && (
+                  <TabsTrigger value="errors" className="gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Errors
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="reports">
@@ -430,6 +438,13 @@ const AdminDashboard = () => {
               <TabsContent value="cohorts">
                 <CohortAnalytics />
               </TabsContent>
+
+              {myRole === "admin" && (
+                <TabsContent value="errors">
+                  <ErrorMonitor />
+                </TabsContent>
+              )}
+
 
 
               {/* Revenue Tab */}
