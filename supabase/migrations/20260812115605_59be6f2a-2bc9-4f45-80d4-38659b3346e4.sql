@@ -1,0 +1,1 @@
+DELETE FROM public.function_errors WHERE function_name = 'guest-assistant' AND message LIKE '%not valid JSON%';
