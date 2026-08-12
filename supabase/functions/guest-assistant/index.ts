@@ -1,3 +1,4 @@
+import { reportError } from "../_shared/observability.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -163,6 +164,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (e) {
+    await reportError("guest-assistant", e, { method: req.method, url: req.url });
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,3 +1,4 @@
+import { reportError } from "../_shared/observability.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -74,7 +75,8 @@ Deno.serve(async (req) => {
       success: true,
       message: "You are now an admin. Reload the app to see the Admin area.",
     });
-  } catch (_err) {
+  } catch (err) {
+    await reportError("bootstrap-admin", err, { method: req.method, url: req.url });
     return json({ error: "Internal server error" }, 500);
   }
 });
