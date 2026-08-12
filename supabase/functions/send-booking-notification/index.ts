@@ -1,3 +1,4 @@
+import { reportError } from "../_shared/observability.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -345,6 +346,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    await reportError("send-booking-notification", error, { method: req.method, url: req.url });
     console.error("send-booking-notification error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
