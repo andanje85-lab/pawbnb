@@ -21,5 +21,14 @@ jobs:
       - name: Typecheck
         run: bunx tsc --noEmit
 
-      - name: Run tests
+      - name: Run frontend tests
         run: bunx vitest run
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run edge function tests
+        run: deno test --allow-net --allow-env supabase/functions/
+
