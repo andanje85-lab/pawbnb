@@ -688,6 +688,10 @@ export type Database = {
           created_at: string
           id: string
           listing_id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
+          moderation_status: string
           rating: number
           reviewer_id: string
         }
@@ -697,6 +701,10 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string
           rating: number
           reviewer_id: string
         }
@@ -706,6 +714,10 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
+          moderation_status?: string
           rating?: number
           reviewer_id?: string
         }
@@ -773,6 +785,51 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verification_requests: {
+        Row: {
+          created_at: string
+          document_type: string
+          document_urls: Json
+          id: string
+          legal_name: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          document_urls?: Json
+          id?: string
+          legal_name: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          document_urls?: Json
+          id?: string
+          legal_name?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
