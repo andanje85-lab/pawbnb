@@ -61,7 +61,8 @@ const ReportDialog = ({ targetType, targetId, triggerLabel, variant = "ghost", s
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const reasons = targetType === "user" ? REASONS_USER : REASONS_LISTING;
+  const reasons =
+    targetType === "user" ? REASONS_USER : targetType === "review" ? REASONS_REVIEW : REASONS_LISTING;
 
   const submit = async () => {
     if (!user) {
