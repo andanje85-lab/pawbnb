@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import ReportDialog from "@/components/ReportDialog";
 
 interface ReviewsListProps {
   listingId: string;
