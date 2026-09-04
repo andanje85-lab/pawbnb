@@ -18,6 +18,7 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
         .from("reviews")
         .select("*, profiles:reviewer_id(full_name)")
         .eq("listing_id", listingId)
+        .eq("moderation_status", "published")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
