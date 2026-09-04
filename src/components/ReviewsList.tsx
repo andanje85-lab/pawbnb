@@ -86,6 +86,9 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
                 {review.comment && (
                   <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
                 )}
+                <div className="mt-1 -ml-2">
+                  <ReportDialog targetType="review" targetId={review.id} triggerLabel="Report review" />
+                </div>
               </div>
             </div>
           );
