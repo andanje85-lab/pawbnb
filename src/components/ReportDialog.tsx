@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 type Props = {
-  targetType: "user" | "listing";
+  targetType: "user" | "listing" | "review";
   targetId: string;
   triggerLabel?: string;
   variant?: "outline" | "ghost" | "link";
@@ -39,6 +39,14 @@ const REASONS_LISTING = [
   { value: "other", label: "Something else" },
 ];
 
+const REASONS_REVIEW = [
+  { value: "fake", label: "Fake or incentivised review" },
+  { value: "harassment", label: "Harassment or personal attack" },
+  { value: "off_topic", label: "Off-topic or irrelevant" },
+  { value: "private_info", label: "Contains private information" },
+  { value: "other", label: "Something else" },
+];
+
 const schema = z.object({
   reason: z.string().min(1),
   details: z.string().trim().max(1000).optional(),
@@ -53,7 +61,8 @@ const ReportDialog = ({ targetType, targetId, triggerLabel, variant = "ghost", s
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const reasons = targetType === "user" ? REASONS_USER : REASONS_LISTING;
+  const reasons =
+    targetType === "user" ? REASONS_USER : targetType === "review" ? REASONS_REVIEW : REASONS_LISTING;
 
   const submit = async () => {
     if (!user) {
@@ -92,7 +101,8 @@ const ReportDialog = ({ targetType, targetId, triggerLabel, variant = "ghost", s
       <DialogTrigger asChild>
         <Button variant={variant} size={size} className="gap-1.5">
           <Flag className="w-3.5 h-3.5" />
-          {triggerLabel ?? (targetType === "user" ? "Report user" : "Report listing")}
+          {triggerLabel ??
+            (targetType === "user" ? "Report user" : targetType === "review" ? "Report review" : "Report listing")}
         </Button>
       </DialogTrigger>
       <DialogContent>

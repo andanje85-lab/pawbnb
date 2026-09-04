@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import ReportDialog from "@/components/ReportDialog";
 
 interface ReviewsListProps {
   listingId: string;
@@ -18,6 +19,7 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
         .from("reviews")
         .select("*, profiles:reviewer_id(full_name)")
         .eq("listing_id", listingId)
+        .eq("moderation_status", "published")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -85,6 +87,9 @@ const ReviewsList = ({ listingId }: ReviewsListProps) => {
                 {review.comment && (
                   <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
                 )}
+                <div className="mt-1 -ml-2">
+                  <ReportDialog targetType="review" targetId={review.id} triggerLabel="Report review" />
+                </div>
               </div>
             </div>
           );

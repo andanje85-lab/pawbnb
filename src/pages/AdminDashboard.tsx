@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { ReportsTriage, ClaimsTriage } from "@/components/AdminTriage";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
+import { VerificationTriage } from "@/components/VerificationTriage";
+import { ReviewModeration } from "@/components/ReviewModeration";
 
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -409,6 +411,14 @@ const AdminDashboard = () => {
                   <ShieldAlert className="w-3.5 h-3.5" />
                   Claims
                 </TabsTrigger>
+                <TabsTrigger value="verification" className="gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Verification
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="gap-1.5">
+                  <Flag className="w-3.5 h-3.5" />
+                  Reviews
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
@@ -429,6 +439,12 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="claims">
                 <ClaimsTriage search={search} />
+              </TabsContent>
+              <TabsContent value="verification">
+                <VerificationTriage search={search} />
+              </TabsContent>
+              <TabsContent value="reviews">
+                <ReviewModeration search={search} />
               </TabsContent>
 
               <TabsContent value="metrics">
