@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 type Props = {
-  targetType: "user" | "listing";
+  targetType: "user" | "listing" | "review";
   targetId: string;
   triggerLabel?: string;
   variant?: "outline" | "ghost" | "link";
