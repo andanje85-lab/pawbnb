@@ -101,7 +101,8 @@ const ReportDialog = ({ targetType, targetId, triggerLabel, variant = "ghost", s
       <DialogTrigger asChild>
         <Button variant={variant} size={size} className="gap-1.5">
           <Flag className="w-3.5 h-3.5" />
-          {triggerLabel ?? (targetType === "user" ? "Report user" : "Report listing")}
+          {triggerLabel ??
+            (targetType === "user" ? "Report user" : targetType === "review" ? "Report review" : "Report listing")}
         </Button>
       </DialogTrigger>
       <DialogContent>
