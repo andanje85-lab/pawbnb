@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { ReportsTriage, ClaimsTriage } from "@/components/AdminTriage";
 import { ErrorMonitor } from "@/components/ErrorMonitor";
+import { VerificationTriage } from "@/components/VerificationTriage";
+import { ReviewModeration } from "@/components/ReviewModeration";
 
 import { format, formatDistanceToNow } from "date-fns";
 import {

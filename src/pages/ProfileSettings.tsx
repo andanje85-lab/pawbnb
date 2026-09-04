@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import TwoFactorSettings from "@/components/TwoFactorSettings";
+import IdVerification from "@/components/IdVerification";
 import { useToast } from "@/hooks/use-toast";
 import { User, Camera, Loader2, ShieldCheck, BadgeCheck } from "lucide-react";
 import { format } from "date-fns";
