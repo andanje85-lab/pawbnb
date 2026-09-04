@@ -39,6 +39,14 @@ const REASONS_LISTING = [
   { value: "other", label: "Something else" },
 ];
 
+const REASONS_REVIEW = [
+  { value: "fake", label: "Fake or incentivised review" },
+  { value: "harassment", label: "Harassment or personal attack" },
+  { value: "off_topic", label: "Off-topic or irrelevant" },
+  { value: "private_info", label: "Contains private information" },
+  { value: "other", label: "Something else" },
+];
+
 const schema = z.object({
   reason: z.string().min(1),
   details: z.string().trim().max(1000).optional(),
