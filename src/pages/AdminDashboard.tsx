@@ -411,6 +411,14 @@ const AdminDashboard = () => {
                   <ShieldAlert className="w-3.5 h-3.5" />
                   Claims
                 </TabsTrigger>
+                <TabsTrigger value="verification" className="gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Verification
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="gap-1.5">
+                  <Flag className="w-3.5 h-3.5" />
+                  Reviews
+                </TabsTrigger>
                 {myRole === "admin" && <TabsTrigger value="users">Users</TabsTrigger>}
                 {myRole === "admin" && (
                   <TabsTrigger value="audit" className="gap-1.5">
