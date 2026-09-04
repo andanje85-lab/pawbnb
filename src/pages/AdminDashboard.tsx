@@ -440,6 +440,12 @@ const AdminDashboard = () => {
               <TabsContent value="claims">
                 <ClaimsTriage search={search} />
               </TabsContent>
+              <TabsContent value="verification">
+                <VerificationTriage search={search} />
+              </TabsContent>
+              <TabsContent value="reviews">
+                <ReviewModeration search={search} />
+              </TabsContent>
 
               <TabsContent value="metrics">
                 <AdminMetrics />
