@@ -202,7 +202,10 @@ const ProfileSettings = () => {
 
         {/* ID verification */}
         <div className="mt-6">
-          <IdVerification />
+          <IdVerification
+            verified={!!profile?.id_verified}
+            verifiedAt={profile?.id_verified_at ?? null}
+          />
         </div>
 
         <TwoFactorSettings />
