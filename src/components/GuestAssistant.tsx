@@ -346,7 +346,7 @@ const GuestAssistant = () => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.4, type: "spring" }}
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 transition"
+        className="fixed bottom-24 right-5 lg:bottom-5 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 transition"
         aria-label={open ? "Close assistant" : "Open assistant"}
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
@@ -359,7 +359,7 @@ const GuestAssistant = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-5 z-50 w-[min(380px,calc(100vw-2.5rem))] h-[min(560px,calc(100vh-8rem))] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-40 right-5 lg:bottom-24 z-50 w-[min(380px,calc(100vw-2.5rem))] h-[min(560px,calc(100vh-12rem))] lg:h-[min(560px,calc(100vh-8rem))] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-gradient-to-r from-primary/10 to-accent/20">
