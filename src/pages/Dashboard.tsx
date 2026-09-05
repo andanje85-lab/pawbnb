@@ -405,15 +405,16 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-8">Manage your bookings{isHost ? " and listings" : ""}.</p>
 
             <Tabs value={activeTab} onValueChange={(v) => setSearchParams(v === "bookings" ? {} : { tab: v })}>
-              <TabsList className="mb-6 flex-wrap h-auto">
-                <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-                <TabsTrigger value="favorites">Favorites</TabsTrigger>
-                {isHost && <TabsTrigger value="listings">My Listings</TabsTrigger>}
-                {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
-                {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
-                {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
-                {isHost && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
+              <TabsList className="mb-6 h-auto w-full justify-start gap-1 overflow-x-auto flex-nowrap sm:w-auto sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsTrigger value="bookings" className="shrink-0">My Bookings</TabsTrigger>
+                <TabsTrigger value="favorites" className="shrink-0">Favorites</TabsTrigger>
+                {isHost && <TabsTrigger value="listings" className="shrink-0">My Listings</TabsTrigger>}
+                {isHost && <TabsTrigger value="requests" className="shrink-0">Booking Requests</TabsTrigger>}
+                {isHost && <TabsTrigger value="availability" className="shrink-0">Availability</TabsTrigger>}
+                {isHost && <TabsTrigger value="earnings" className="shrink-0">Earnings</TabsTrigger>}
+                {isHost && <TabsTrigger value="analytics" className="shrink-0">Analytics</TabsTrigger>}
               </TabsList>
+
 
               <TabsContent value="favorites">
                 <FavoritesList />
