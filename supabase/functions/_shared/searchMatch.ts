@@ -62,10 +62,17 @@ export function matches(listing: MatchableListing, f: SavedFilters): boolean {
   return true;
 }
 
-/** ISO-style year + week reference used to make weekly digests idempotent. */
+/** ISO-8601 year + week reference used to make weekly digests idempotent. */
 export function weekRef(now: Date): string {
-  const week = Math.ceil(
-    ((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7,
-  );
-  return `${now.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+  // Thursday of the current ISO week determines the ISO year and week number.
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dayNum = (d.getUTCDay() + 6) % 7; // Monday = 0
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const isoYear = d.getUTCFullYear();
+  const firstThursday = new Date(Date.UTC(isoYear, 0, 4));
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+  const week = 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 86400000));
+  return `${isoYear}-W${String(week).padStart(2, "0")}`;
 }
+
