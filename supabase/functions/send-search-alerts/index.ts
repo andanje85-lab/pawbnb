@@ -1,4 +1,5 @@
 import { reportError } from "../_shared/observability.ts";
+import { matches, type SavedFilters } from "../_shared/searchMatch.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -6,46 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Haversine distance in km
-const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const R = 6371;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
-  return 2 * R * Math.asin(Math.sqrt(h));
-};
-
-interface SavedFilters {
-  city?: string;
-  priceRange?: [number, number];
-  maxDogs?: number | null;
-  amenities?: string[];
-  center?: { lat: number; lng: number } | null;
-  radiusKm?: number | null;
-}
-
-function matches(listing: any, f: SavedFilters): boolean {
-  if (f.city && !(listing.city || "").toLowerCase().includes(f.city.toLowerCase())) return false;
-  if (f.priceRange) {
-    if (listing.price_per_night < f.priceRange[0] || listing.price_per_night > f.priceRange[1]) return false;
-  }
-  if (f.maxDogs != null && (listing.max_dogs ?? 0) < f.maxDogs) return false;
-  if (f.amenities?.length) {
-    const la = (listing.amenities || []).map((a: string) => a.toLowerCase());
-    const ok = f.amenities.every((a) => la.some((x: string) => x.includes(a.toLowerCase())));
-    if (!ok) return false;
-  }
-  if (f.center && f.radiusKm != null) {
-    if (listing.latitude == null || listing.longitude == null) return false;
-    if (distanceKm(f.center, { lat: listing.latitude, lng: listing.longitude }) > f.radiusKm) return false;
-  }
-  return true;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

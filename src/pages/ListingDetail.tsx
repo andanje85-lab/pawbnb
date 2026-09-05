@@ -540,7 +540,7 @@ const ListingDetail = () => {
             </div>
 
             {/* Right: Booking Card */}
-            <div className="lg:sticky lg:top-24 h-fit">
+            <div id="booking-panel" className="scroll-mt-24 lg:sticky lg:top-24 h-fit">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -753,7 +753,35 @@ const ListingDetail = () => {
           </div>
         </div>
       </main>
+
+      {/* Sticky mobile booking bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm lg:hidden">
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-foreground">
+            ${nights > 0 ? totalPrice.toFixed(0) : listing.price}
+            <span className="text-sm font-normal text-muted-foreground">
+              {nights > 0 ? ` · ${nights} night${nights === 1 ? "" : "s"}` : " / night"}
+            </span>
+          </p>
+        </div>
+        <Button
+          size="lg"
+          className="shrink-0"
+          disabled={booking}
+          onClick={() => {
+            if (!user || nights === 0) {
+              document.getElementById("booking-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              return;
+            }
+            handleBook();
+          }}
+        >
+          {!user ? "Sign in to book" : nights === 0 ? "Select dates" : (listing as any).bookingType === "instant" ? "Instant Book" : "Request to Book"}
+        </Button>
+      </div>
+
       <Footer />
+
     </div>
   );
 };

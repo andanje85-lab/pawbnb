@@ -405,15 +405,16 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-8">Manage your bookings{isHost ? " and listings" : ""}.</p>
 
             <Tabs value={activeTab} onValueChange={(v) => setSearchParams(v === "bookings" ? {} : { tab: v })}>
-              <TabsList className="mb-6 flex-wrap h-auto">
-                <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-                <TabsTrigger value="favorites">Favorites</TabsTrigger>
-                {isHost && <TabsTrigger value="listings">My Listings</TabsTrigger>}
-                {isHost && <TabsTrigger value="requests">Booking Requests</TabsTrigger>}
-                {isHost && <TabsTrigger value="availability">Availability</TabsTrigger>}
-                {isHost && <TabsTrigger value="earnings">Earnings</TabsTrigger>}
-                {isHost && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
+              <TabsList className="mb-6 h-auto w-full justify-start gap-1 overflow-x-auto flex-nowrap sm:w-auto sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsTrigger value="bookings" className="shrink-0">My Bookings</TabsTrigger>
+                <TabsTrigger value="favorites" className="shrink-0">Favorites</TabsTrigger>
+                {isHost && <TabsTrigger value="listings" className="shrink-0">My Listings</TabsTrigger>}
+                {isHost && <TabsTrigger value="requests" className="shrink-0">Booking Requests</TabsTrigger>}
+                {isHost && <TabsTrigger value="availability" className="shrink-0">Availability</TabsTrigger>}
+                {isHost && <TabsTrigger value="earnings" className="shrink-0">Earnings</TabsTrigger>}
+                {isHost && <TabsTrigger value="analytics" className="shrink-0">Analytics</TabsTrigger>}
               </TabsList>
+
 
               <TabsContent value="favorites">
                 <FavoritesList />
@@ -462,7 +463,7 @@ const Dashboard = () => {
                             <img
                               src={getListingPhoto(listing)}
                               alt={listing?.title}
-                              className="w-24 h-24 rounded-lg object-cover shrink-0"
+                              className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -590,12 +591,12 @@ const Dashboard = () => {
                           key={listing.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="flex gap-4 p-4 rounded-xl border border-border bg-card"
+                          className="flex flex-wrap gap-4 p-4 rounded-xl border border-border bg-card"
                         >
                           <img
                             src={getListingPhoto(listing)}
                             alt={listing.title}
-                            className="w-24 h-24 rounded-lg object-cover shrink-0 cursor-pointer"
+                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0 cursor-pointer"
                             onClick={() => navigate(`/listing/${listing.id}`)}
                           />
                           <div className="flex-1 min-w-0">
@@ -637,7 +638,7 @@ const Dashboard = () => {
                               )}
                             </div>
                           </div>
-                          <div className="flex flex-col gap-2 shrink-0">
+                          <div className="flex w-full justify-end gap-1 border-t border-border pt-2 sm:w-auto sm:flex-col sm:gap-2 sm:border-t-0 sm:pt-0 shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
