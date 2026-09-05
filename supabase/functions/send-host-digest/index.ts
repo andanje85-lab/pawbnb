@@ -24,9 +24,8 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekRef = `${now.getUTCFullYear()}-W${String(
-      Math.ceil(((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7)
-    ).padStart(2, "0")}`;
+    const weekRef = isoWeekRef(now);
+
 
     const { data: listings, error: lErr } = await admin
       .from("listings")
