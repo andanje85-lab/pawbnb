@@ -463,7 +463,7 @@ const Dashboard = () => {
                             <img
                               src={getListingPhoto(listing)}
                               alt={listing?.title}
-                              className="w-24 h-24 rounded-lg object-cover shrink-0"
+                              className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -591,12 +591,12 @@ const Dashboard = () => {
                           key={listing.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="flex gap-4 p-4 rounded-xl border border-border bg-card"
+                          className="flex flex-wrap gap-4 p-4 rounded-xl border border-border bg-card"
                         >
                           <img
                             src={getListingPhoto(listing)}
                             alt={listing.title}
-                            className="w-24 h-24 rounded-lg object-cover shrink-0 cursor-pointer"
+                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0 cursor-pointer"
                             onClick={() => navigate(`/listing/${listing.id}`)}
                           />
                           <div className="flex-1 min-w-0">
@@ -638,7 +638,7 @@ const Dashboard = () => {
                               )}
                             </div>
                           </div>
-                          <div className="flex flex-col gap-2 shrink-0">
+                          <div className="flex w-full justify-end gap-1 border-t border-border pt-2 sm:w-auto sm:flex-col sm:gap-2 sm:border-t-0 sm:pt-0 shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
