@@ -302,29 +302,79 @@ export type Database = {
         Row: {
           blocked_date: string
           created_at: string
+          external_uid: string | null
           id: string
           listing_id: string
           reason: string | null
+          source: string
         }
         Insert: {
           blocked_date: string
           created_at?: string
+          external_uid?: string | null
           id?: string
           listing_id: string
           reason?: string | null
+          source?: string
         }
         Update: {
           blocked_date?: string
           created_at?: string
+          external_uid?: string | null
           id?: string
           listing_id?: string
           reason?: string | null
+          source?: string
         }
         Relationships: [
           {
             foreignKeyName: "listing_blocked_dates_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_calendar_sync: {
+        Row: {
+          created_at: string
+          export_token: string
+          id: string
+          import_url: string | null
+          imported_count: number
+          last_sync_status: string | null
+          last_synced_at: string | null
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          export_token?: string
+          id?: string
+          import_url?: string | null
+          imported_count?: number
+          last_sync_status?: string | null
+          last_synced_at?: string | null
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          export_token?: string
+          id?: string
+          import_url?: string | null
+          imported_count?: number
+          last_sync_status?: string | null
+          last_synced_at?: string | null
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_calendar_sync_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -536,6 +586,54 @@ export type Database = {
           reference_id?: string | null
           title?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payout_methods: {
+        Row: {
+          account_holder_name: string
+          account_last4: string | null
+          bank_name: string | null
+          country: string
+          created_at: string
+          currency: string
+          id: string
+          is_default: boolean
+          method_type: string
+          paypal_email: string | null
+          routing_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder_name: string
+          account_last4?: string | null
+          bank_name?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_default?: boolean
+          method_type?: string
+          paypal_email?: string | null
+          routing_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string
+          account_last4?: string | null
+          bank_name?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          is_default?: boolean
+          method_type?: string
+          paypal_email?: string | null
+          routing_number?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
