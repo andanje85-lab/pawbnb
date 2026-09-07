@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { CalendarSync } from "@/components/CalendarSync";
 
 interface Listing {
   id: string;
@@ -186,6 +187,13 @@ export function HostAvailability({ listings }: HostAvailabilityProps) {
           </CardContent>
         </Card>
       </div>
+
+      {selectedListingId && (
+        <CalendarSync
+          listingId={selectedListingId}
+          listingTitle={listings.find((l) => l.id === selectedListingId)?.title ?? "this listing"}
+        />
+      )}
     </div>
   );
 }
