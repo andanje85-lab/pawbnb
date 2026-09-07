@@ -186,6 +186,13 @@ export function HostAvailability({ listings }: HostAvailabilityProps) {
           </CardContent>
         </Card>
       </div>
+
+      {selectedListingId && (
+        <CalendarSync
+          listingId={selectedListingId}
+          listingTitle={listings.find((l) => l.id === selectedListingId)?.title ?? "this listing"}
+        />
+      )}
     </div>
   );
 }
