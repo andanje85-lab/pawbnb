@@ -10,6 +10,7 @@ import BookingModificationDialog from "@/components/BookingModificationDialog";
 import { HostAvailability } from "@/components/HostAvailability";
 import { HostEarnings } from "@/components/HostEarnings";
 import { HostAnalytics } from "@/components/HostAnalytics";
+import { PayoutMethods } from "@/components/PayoutMethods";
 import FavoritesList from "@/components/FavoritesList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
