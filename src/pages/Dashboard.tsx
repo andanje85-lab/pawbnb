@@ -427,8 +427,9 @@ const Dashboard = () => {
               )}
 
               {isHost && user && (
-                <TabsContent value="earnings">
+                <TabsContent value="earnings" className="space-y-6">
                   <HostEarnings hostId={user.id} />
+                  <PayoutMethods />
                 </TabsContent>
               )}
 
