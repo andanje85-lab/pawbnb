@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock, Settings, Zap, Handshake } from "lucide-react";
+import { CalendarDays, Dog, Download, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock, Settings, Zap, Handshake } from "lucide-react";
+import { generateBookingReceipt } from "@/lib/receipt";
 import ListingSettingsDialog from "@/components/ListingSettingsDialog";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { computeRefund } from "@/lib/refund";
