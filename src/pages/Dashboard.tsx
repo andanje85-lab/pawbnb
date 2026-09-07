@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { CalendarDays, Dog, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock, Settings, Zap, Handshake } from "lucide-react";
+import { CalendarDays, Dog, Download, MapPin, Plus, ToggleLeft, ToggleRight, Trash2, Star, XCircle, MessageSquare, Clock, Settings, Zap, Handshake } from "lucide-react";
+import { generateBookingReceipt } from "@/lib/receipt";
 import ListingSettingsDialog from "@/components/ListingSettingsDialog";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { computeRefund } from "@/lib/refund";
@@ -504,6 +505,16 @@ const Dashboard = () => {
                                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
                                   </p>
                                 )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    generateBookingReceipt(booking as any, profile?.full_name)
+                                  }
+                                >
+                                  <Download className="w-3.5 h-3.5 mr-1" />
+                                  Receipt
+                                </Button>
                                 {(booking.status === "pending" || booking.status === "confirmed") && (
                                   <>
                                     <Button
