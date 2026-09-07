@@ -504,6 +504,16 @@ const Dashboard = () => {
                                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Reviewed
                                   </p>
                                 )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    generateBookingReceipt(booking as any, profile?.full_name)
+                                  }
+                                >
+                                  <Download className="w-3.5 h-3.5 mr-1" />
+                                  Receipt
+                                </Button>
                                 {(booking.status === "pending" || booking.status === "confirmed") && (
                                   <>
                                     <Button
