@@ -243,6 +243,15 @@ const Index = () => {
     [sortedListings]
   );
 
+  // On phones, default the browse section to a map-first experience
+  // (only once, and only when stays actually have pinned locations).
+  useEffect(() => {
+    if (isMobile && !mobileDefaultApplied && mappableListings.length > 0) {
+      setViewMode("map");
+      setMobileDefaultApplied(true);
+    }
+  }, [isMobile, mobileDefaultApplied, mappableListings.length]);
+
   // Keep the highlighted card valid as filters/sorting change
   useEffect(() => {
     if (mappableListings.length === 0) {
