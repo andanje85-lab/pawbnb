@@ -75,13 +75,6 @@ const Index = () => {
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [mobileDefaultApplied, setMobileDefaultApplied] = useState(false);
 
-  // On phones, default the browse section to a map-first experience.
-  useEffect(() => {
-    if (isMobile && !mobileDefaultApplied) {
-      setViewMode("map");
-      setMobileDefaultApplied(true);
-    }
-  }, [isMobile, mobileDefaultApplied]);
 
 
 
