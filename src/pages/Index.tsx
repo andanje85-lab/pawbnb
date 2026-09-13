@@ -349,10 +349,9 @@ const Index = () => {
               <p className="text-muted-foreground text-sm">Try adjusting your search criteria or clearing filters.</p>
             </motion.div>
           ) : viewMode === "map" ? (
-            <ListingsMap
-              listings={sortedListings
-                .filter((l) => l.latitude != null && l.longitude != null)
-                .map((l) => ({
+            <div className="space-y-3">
+              <ListingsMap
+                listings={mappableListings.map((l) => ({
                   id: l.id,
                   title: l.title,
                   image: l.image,
@@ -361,8 +360,34 @@ const Index = () => {
                   latitude: l.latitude as number,
                   longitude: l.longitude as number,
                 }))}
-              center={filters.center}
-            />
+                center={filters.center}
+                height={isMobile ? 420 : 480}
+                selectedId={selectedListingId}
+                onSelectListing={setSelectedListingId}
+                disablePopups={isMobile}
+              />
+              {isMobile && (
+                <MapCardRow
+                  listings={mappableListings.map((l) => ({
+                    id: l.id,
+                    title: l.title,
+                    image: l.image,
+                    price: l.price,
+                    location: l.location,
+                    rating: l.rating,
+                    reviews: l.reviews,
+                    distanceKm: l.distanceKm,
+                  }))}
+                  selectedId={selectedListingId}
+                  onSelect={setSelectedListingId}
+                />
+              )}
+              {mappableListings.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  None of these stays have a pinned location yet — switch to List view to see them.
+                </p>
+              )}
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
