@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ListingCard from "@/components/ListingCard";
@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { ArrowUpDown, LayoutGrid, Map as MapIcon } from "lucide-react";
 import ListingsMap from "@/components/ListingsMap";
+import MapCardRow from "@/components/MapCardRow";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc" | "distance";
@@ -69,6 +71,11 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [appliedFilters, setAppliedFilters] = useState<Partial<FilterValues> | undefined>();
   const [filtersKey, setFiltersKey] = useState(0);
+  const isMobile = useIsMobile();
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+  const [mobileDefaultApplied, setMobileDefaultApplied] = useState(false);
+
+
 
 
   const { data: dbListings, isLoading } = useQuery({
@@ -231,6 +238,32 @@ const Index = () => {
     }
   }, [listingsWithDistance, sortBy]);
 
+  const mappableListings = useMemo(
+    () => sortedListings.filter((l) => l.latitude != null && l.longitude != null),
+    [sortedListings]
+  );
+
+  // On phones, default the browse section to a map-first experience
+  // (only once, and only when stays actually have pinned locations).
+  useEffect(() => {
+    if (isMobile && !mobileDefaultApplied && mappableListings.length > 0) {
+      setViewMode("map");
+      setMobileDefaultApplied(true);
+    }
+  }, [isMobile, mobileDefaultApplied, mappableListings.length]);
+
+  // Keep the highlighted card valid as filters/sorting change
+  useEffect(() => {
+    if (mappableListings.length === 0) {
+      setSelectedListingId(null);
+      return;
+    }
+    if (!selectedListingId || !mappableListings.some((l) => l.id === selectedListingId)) {
+      setSelectedListingId(mappableListings[0].id);
+    }
+  }, [mappableListings, selectedListingId]);
+
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -335,10 +368,9 @@ const Index = () => {
               <p className="text-muted-foreground text-sm">Try adjusting your search criteria or clearing filters.</p>
             </motion.div>
           ) : viewMode === "map" ? (
-            <ListingsMap
-              listings={sortedListings
-                .filter((l) => l.latitude != null && l.longitude != null)
-                .map((l) => ({
+            <div className="space-y-3">
+              <ListingsMap
+                listings={mappableListings.map((l) => ({
                   id: l.id,
                   title: l.title,
                   image: l.image,
@@ -347,8 +379,34 @@ const Index = () => {
                   latitude: l.latitude as number,
                   longitude: l.longitude as number,
                 }))}
-              center={filters.center}
-            />
+                center={filters.center}
+                height={isMobile ? 420 : 480}
+                selectedId={selectedListingId}
+                onSelectListing={setSelectedListingId}
+                disablePopups={isMobile}
+              />
+              {isMobile && (
+                <MapCardRow
+                  listings={mappableListings.map((l) => ({
+                    id: l.id,
+                    title: l.title,
+                    image: l.image,
+                    price: l.price,
+                    location: l.location,
+                    rating: l.rating,
+                    reviews: l.reviews,
+                    distanceKm: l.distanceKm,
+                  }))}
+                  selectedId={selectedListingId}
+                  onSelect={setSelectedListingId}
+                />
+              )}
+              {mappableListings.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  None of these stays have a pinned location yet — switch to List view to see them.
+                </p>
+              )}
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedListings.map((listing) => (
