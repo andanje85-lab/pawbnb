@@ -245,6 +245,23 @@ const Index = () => {
     }
   }, [listingsWithDistance, sortBy]);
 
+  const mappableListings = useMemo(
+    () => sortedListings.filter((l) => l.latitude != null && l.longitude != null),
+    [sortedListings]
+  );
+
+  // Keep the highlighted card valid as filters/sorting change
+  useEffect(() => {
+    if (mappableListings.length === 0) {
+      setSelectedListingId(null);
+      return;
+    }
+    if (!selectedListingId || !mappableListings.some((l) => l.id === selectedListingId)) {
+      setSelectedListingId(mappableListings[0].id);
+    }
+  }, [mappableListings, selectedListingId]);
+
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
