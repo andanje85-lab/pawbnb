@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ListingCard from "@/components/ListingCard";
@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { ArrowUpDown, LayoutGrid, Map as MapIcon } from "lucide-react";
 import ListingsMap from "@/components/ListingsMap";
+import MapCardRow from "@/components/MapCardRow";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type SortOption = "newest" | "price_asc" | "price_desc" | "rating_desc" | "distance";
