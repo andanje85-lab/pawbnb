@@ -67,7 +67,7 @@ const ListingsMap = ({
     if (!mapNodeRef.current || mapRef.current) return;
 
     const map = L.map(mapNodeRef.current, { scrollWheelZoom: true }).setView(initialCenter, 4);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png", {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);

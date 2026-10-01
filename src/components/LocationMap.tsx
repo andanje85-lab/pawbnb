@@ -32,7 +32,7 @@ const LocationMap = ({ lat, lng, approximate = false, height = 280 }: LocationMa
       [lat, lng],
       approximate ? 12 : 14
     );
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png", {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     mapRef.current = map;
