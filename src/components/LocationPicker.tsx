@@ -43,7 +43,7 @@ const LocationPicker = ({ value, onChange, city }: LocationPickerProps) => {
     if (!mapNodeRef.current || mapRef.current) return;
 
     const map = L.map(mapNodeRef.current, { scrollWheelZoom: true }).setView(center, value ? 13 : 4);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png", {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     map.on("click", (e) => {
