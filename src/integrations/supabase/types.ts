@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_dogs: {
+        Row: {
+          booking_id: string
+          created_at: string
+          dog_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          dog_id: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          dog_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_dogs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_dogs_dog_id_fkey"
+            columns: ["dog_id"]
+            isOneToOne: false
+            referencedRelation: "dogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_modifications: {
         Row: {
           booking_id: string
@@ -182,6 +215,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dogs: {
+        Row: {
+          breed: string | null
+          care_notes: string | null
+          created_at: string
+          date_of_birth: string | null
+          feeding_instructions: string | null
+          gender: string | null
+          id: string
+          medical_conditions: string | null
+          name: string
+          owner_id: string
+          photo_url: string | null
+          size: string | null
+          spayed_neutered: boolean
+          temperament: string | null
+          updated_at: string
+          vaccination_notes: string | null
+          vaccination_status: string
+          vet_name: string | null
+          vet_phone: string | null
+        }
+        Insert: {
+          breed?: string | null
+          care_notes?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          feeding_instructions?: string | null
+          gender?: string | null
+          id?: string
+          medical_conditions?: string | null
+          name: string
+          owner_id: string
+          photo_url?: string | null
+          size?: string | null
+          spayed_neutered?: boolean
+          temperament?: string | null
+          updated_at?: string
+          vaccination_notes?: string | null
+          vaccination_status?: string
+          vet_name?: string | null
+          vet_phone?: string | null
+        }
+        Update: {
+          breed?: string | null
+          care_notes?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          feeding_instructions?: string | null
+          gender?: string | null
+          id?: string
+          medical_conditions?: string | null
+          name?: string
+          owner_id?: string
+          photo_url?: string | null
+          size?: string | null
+          spayed_neutered?: boolean
+          temperament?: string | null
+          updated_at?: string
+          vaccination_notes?: string | null
+          vaccination_status?: string
+          vet_name?: string | null
+          vet_phone?: string | null
+        }
+        Relationships: []
       }
       favorites: {
         Row: {

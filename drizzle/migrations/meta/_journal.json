@@ -8,6 +8,13 @@
       "when": 1790882638556,
       "tag": "0000_lock_down_internal_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791069179159,
+      "tag": "0001_add_dog_profiles",
+      "breakpoints": true
     }
   ]
 }
