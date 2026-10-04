@@ -20,6 +20,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
+import DogSelector from "@/components/DogSelector";
 import { getPolicy } from "@/lib/cancellationPolicy";
 import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
 import { Zap, Handshake } from "lucide-react";
@@ -633,7 +634,7 @@ const ListingDetail = () => {
                     selectedIds={selectedDogIds}
                     onSelectedIdsChange={setSelectedDogIds}
                     maxDogs={listing.maxDogs}
-                    isDbListing={isDbListing}
+                    isDbListing={!!(listing as any).isDb}
                   />
                 </div>
 
