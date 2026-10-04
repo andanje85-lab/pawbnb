@@ -12,6 +12,8 @@ import { HostEarnings } from "@/components/HostEarnings";
 import { HostAnalytics } from "@/components/HostAnalytics";
 import { PayoutMethods } from "@/components/PayoutMethods";
 import FavoritesList from "@/components/FavoritesList";
+import MyDogs from "@/components/MyDogs";
+import BookingDogs from "@/components/BookingDogs";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -410,6 +412,7 @@ const Dashboard = () => {
               <TabsList className="mb-6 h-auto w-full justify-start gap-1 overflow-x-auto flex-nowrap sm:w-auto sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <TabsTrigger value="bookings" className="shrink-0">My Bookings</TabsTrigger>
                 <TabsTrigger value="favorites" className="shrink-0">Favorites</TabsTrigger>
+                <TabsTrigger value="dogs" className="shrink-0">My Dogs</TabsTrigger>
                 {isHost && <TabsTrigger value="listings" className="shrink-0">My Listings</TabsTrigger>}
                 {isHost && <TabsTrigger value="requests" className="shrink-0">Booking Requests</TabsTrigger>}
                 {isHost && <TabsTrigger value="availability" className="shrink-0">Availability</TabsTrigger>}
@@ -417,9 +420,12 @@ const Dashboard = () => {
                 {isHost && <TabsTrigger value="analytics" className="shrink-0">Analytics</TabsTrigger>}
               </TabsList>
 
-
               <TabsContent value="favorites">
                 <FavoritesList />
+              </TabsContent>
+
+              <TabsContent value="dogs">
+                <MyDogs />
               </TabsContent>
 
               {isHost && (
@@ -728,6 +734,7 @@ const Dashboard = () => {
                               </span>
                               <span className="font-medium text-foreground">${booking.total_price}</span>
                             </div>
+                            <BookingDogs bookingId={booking.id} />
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}

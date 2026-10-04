@@ -20,6 +20,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
+import DogSelector from "@/components/DogSelector";
 import { getPolicy } from "@/lib/cancellationPolicy";
 import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
 import { Zap, Handshake } from "lucide-react";
@@ -84,6 +85,7 @@ const ListingDetail = () => {
   const [liked, setLiked] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [numDogs, setNumDogs] = useState(1);
+  const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState(false);
   const [meetGreetAt, setMeetGreetAt] = useState<string>("");
@@ -294,8 +296,18 @@ const ListingDetail = () => {
         meet_greet_at: meetGreetAt ? new Date(meetGreetAt).toISOString() : null,
         meet_greet_status: meetGreetAt ? "proposed" : null,
       };
-      const { error } = await (supabase as any).from("bookings").insert(insertPayload);
+      const { data: created, error } = await (supabase as any)
+        .from("bookings")
+        .insert(insertPayload)
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created?.id && selectedDogIds.length > 0) {
+        const { error: dogErr } = await (supabase as any)
+          .from("booking_dogs")
+          .insert(selectedDogIds.map((dog_id) => ({ booking_id: created.id, dog_id })));
+        if (dogErr) console.error("Could not attach dogs to booking", dogErr);
+      }
       toast.success(
         isInstant
           ? `Booked! ${nights} night${nights > 1 ? "s" : ""} confirmed instantly.`
@@ -616,17 +628,13 @@ const ListingDetail = () => {
                 </div>
 
                 <div className="mb-4">
-                  <Label htmlFor="numDogs" className="text-sm font-medium mb-2 flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    Number of dogs
-                  </Label>
-                  <Input
-                    id="numDogs"
-                    type="number"
-                    min={1}
-                    max={listing.maxDogs}
-                    value={numDogs}
-                    onChange={(e) => setNumDogs(Math.min(listing.maxDogs, Math.max(1, parseInt(e.target.value) || 1)))}
+                  <DogSelector
+                    numDogs={numDogs}
+                    onNumDogsChange={setNumDogs}
+                    selectedIds={selectedDogIds}
+                    onSelectedIdsChange={setSelectedDogIds}
+                    maxDogs={listing.maxDogs}
+                    isDbListing={!!(listing as any).isDb}
                   />
                 </div>
 
