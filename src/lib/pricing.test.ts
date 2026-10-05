@@ -80,3 +80,20 @@ describe("computePricing", () => {
     expect(r.total).toBe(0);
   });
 });
+
+import { nightlyRateFor } from "./pricing";
+describe("seasonal & weekend pricing", () => {
+  const l = { price_per_night: 50, max_dogs: 2, weekend_price: 70, seasonal_rates: [{ name: "Xmas", start_date: "2026-12-20", end_date: "2026-12-31", price_per_night: 100 }] };
+  it("charges weekend rate on Fri/Sat nights", () => {
+    // Thu 2026-10-08 → 4 nights: Thu, Fri, Sat, Sun
+    const p = computePricing(l, 4, 1, { checkIn: new Date(2026, 9, 8) });
+    expect(p.baseTotal).toBe(50 + 70 + 70 + 50);
+    expect(p.weekendNights).toBe(2);
+  });
+  it("season beats weekend", () => {
+    expect(nightlyRateFor(l, new Date(2026, 11, 25)).price).toBe(100);
+  });
+  it("without a check-in date falls back to flat pricing", () => {
+    expect(computePricing(l, 3, 1).subtotal).toBe(150);
+  });
+});
