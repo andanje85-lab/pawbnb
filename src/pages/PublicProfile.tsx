@@ -159,6 +159,15 @@ const PublicProfile = () => {
                       ID Verified
                     </Badge>
                   )}
+                  {profile.is_host && responseStats &&
+                    (responseStats.sample_size ?? 0) >= 3 &&
+                    Number(responseStats.response_rate) >= 0.9 &&
+                    Number(responseStats.avg_response_minutes ?? Infinity) <= 60 && (
+                    <Badge className="gap-1 bg-accent text-accent-foreground hover:bg-accent/90" title="Replies within an hour on average">
+                      <Zap className="w-3 h-3" />
+                      Fast responder
+                    </Badge>
+                  )}
                 </div>
                 {profile.city && (
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
