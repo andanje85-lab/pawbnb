@@ -62,8 +62,8 @@ export default function BookingModificationDialog({ booking, open, onOpenChange,
 
   const newBreakdown = useMemo(() => {
     if (!pricingInputs || newNights <= 0) return null;
-    return computePricing(pricingInputs, newNights, booking?.number_of_dogs ?? 1, { isRepeatGuest: repeatGuest });
-  }, [pricingInputs, newNights, booking?.number_of_dogs, repeatGuest]);
+    return computePricing(pricingInputs, newNights, booking?.number_of_dogs ?? 1, { isRepeatGuest: repeatGuest, checkIn: dateRange?.from ?? null });
+  }, [dateRange, pricingInputs, newNights, booking?.number_of_dogs, repeatGuest]);
 
   const priceDiff = newBreakdown ? newBreakdown.total - originalTotal : 0;
 
