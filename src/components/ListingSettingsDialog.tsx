@@ -65,7 +65,7 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">Booking settings</DialogTitle>
           <DialogDescription>Configure how guests book "{listing?.title}"</DialogDescription>
