@@ -53,6 +53,8 @@ export default function BookingModificationDialog({ booking, open, onOpenChange,
         repeat_guest_discount_pct: listing.repeat_guest_discount_pct,
         long_stay_min_nights: listing.long_stay_min_nights,
         long_stay_discount_pct: listing.long_stay_discount_pct,
+        weekend_price: listing.weekend_price,
+        seasonal_rates: listing.listing_seasonal_rates,
       }
     : null;
 
@@ -62,8 +64,8 @@ export default function BookingModificationDialog({ booking, open, onOpenChange,
 
   const newBreakdown = useMemo(() => {
     if (!pricingInputs || newNights <= 0) return null;
-    return computePricing(pricingInputs, newNights, booking?.number_of_dogs ?? 1, { isRepeatGuest: repeatGuest });
-  }, [pricingInputs, newNights, booking?.number_of_dogs, repeatGuest]);
+    return computePricing(pricingInputs, newNights, booking?.number_of_dogs ?? 1, { isRepeatGuest: repeatGuest, checkIn: dateRange?.from ?? null });
+  }, [dateRange, pricingInputs, newNights, booking?.number_of_dogs, repeatGuest]);
 
   const priceDiff = newBreakdown ? newBreakdown.total - originalTotal : 0;
 

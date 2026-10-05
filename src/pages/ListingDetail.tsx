@@ -105,7 +105,7 @@ const ListingDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("*, listing_photos(url, sort_order)")
+        .select("*, listing_photos(url, sort_order), listing_seasonal_rates(name, start_date, end_date, price_per_night)")
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;
@@ -196,6 +196,8 @@ const ListingDetail = () => {
         repeatGuestDiscountPct: Number((dbListing as any).repeat_guest_discount_pct ?? 0),
         longStayMinNights: (dbListing as any).long_stay_min_nights as number | null,
         longStayDiscountPct: Number((dbListing as any).long_stay_discount_pct ?? 0),
+        weekendPrice: (dbListing as any).weekend_price as number | null,
+        seasonalRates: ((dbListing as any).listing_seasonal_rates || []) as any[],
         isDb: true,
       };
     }
@@ -230,12 +232,14 @@ const ListingDetail = () => {
         long_stay_min_nights: (listing as any).longStayMinNights,
         long_stay_discount_pct: (listing as any).longStayDiscountPct,
         booking_type: (listing as any).bookingType,
+        weekend_price: (listing as any).weekendPrice,
+        seasonal_rates: (listing as any).seasonalRates,
       },
       nights,
       numDogs,
-      { isRepeatGuest: isRepeat },
+      { isRepeatGuest: isRepeat, checkIn: dateRange?.from ?? null },
     );
-  }, [listing, nights, numDogs, isRepeat]);
+  }, [listing, nights, numDogs, isRepeat, dateRange]);
 
 
   if (isUuid && isLoading) {
@@ -563,6 +567,14 @@ const ListingDetail = () => {
                   <span className="font-serif text-2xl font-bold text-foreground">${listing.price}</span>
                   <span className="text-muted-foreground">/ night</span>
                 </div>
+                {(Number((listing as any).weekendPrice) > 0 || ((listing as any).seasonalRates?.length ?? 0) > 0) && (
+                  <div className="-mt-4 mb-5 text-xs text-muted-foreground space-y-0.5">
+                    {Number((listing as any).weekendPrice) > 0 && <p>Fri &amp; Sat nights: ${(listing as any).weekendPrice}</p>}
+                    {((listing as any).seasonalRates || []).map((r: any) => (
+                      <p key={r.start_date + r.name}>{r.name} ({format(new Date(r.start_date + "T00:00"), "MMM d")} – {format(new Date(r.end_date + "T00:00"), "MMM d")}): ${r.price_per_night}</p>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mb-4">
                   <Label className="text-sm font-medium mb-2 flex items-center gap-1">
@@ -671,8 +683,12 @@ const ListingDetail = () => {
                 {nights > 0 && pricing && (
                   <div className="border-t border-border pt-4 mb-4 space-y-2">
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>${pricing.baseNightly} × {nights} night{nights > 1 ? "s" : ""}</span>
-                      <span>${(pricing.baseNightly * nights).toFixed(2)}</span>
+                      <span>
+                        {pricing.weekendNights || pricing.seasonNights
+                          ? `${nights} night${nights > 1 ? "s" : ""} (${[pricing.weekendNights ? `${pricing.weekendNights} weekend` : null, pricing.seasonNights ? `${pricing.seasonNights} peak` : null].filter(Boolean).join(", ")})`
+                          : `$${pricing.baseNightly} × ${nights} night${nights > 1 ? "s" : ""}`}
+                      </span>
+                      <span>${pricing.baseTotal.toFixed(2)}</span>
                     </div>
                     {pricing.extraDogNightly > 0 && (
                       <div className="flex justify-between text-sm text-muted-foreground">

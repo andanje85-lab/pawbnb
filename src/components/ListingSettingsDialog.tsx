@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Zap, Handshake } from "lucide-react";
+import SeasonalRatesEditor from "@/components/SeasonalRatesEditor";
 
 interface Props {
   listing: any;
@@ -24,6 +25,7 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
   const [repeatPct, setRepeatPct] = useState<string>("0");
   const [longMin, setLongMin] = useState<string>("");
   const [longPct, setLongPct] = useState<string>("0");
+  const [weekendPrice, setWeekendPrice] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
       setRepeatPct(String(listing.repeat_guest_discount_pct ?? 0));
       setLongMin(listing.long_stay_min_nights ? String(listing.long_stay_min_nights) : "");
       setLongPct(String(listing.long_stay_discount_pct ?? 0));
+      setWeekendPrice(listing.weekend_price ? String(listing.weekend_price) : "");
     }
   }, [open, listing]);
 
@@ -41,6 +44,7 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
     try {
       const patch: any = {
         booking_type: bookingType,
+        weekend_price: Number(weekendPrice) > 0 ? Number(weekendPrice) : null,
         extra_dog_price: Number(extraDogPrice) || 0,
         repeat_guest_discount_pct: Math.min(100, Math.max(0, parseInt(repeatPct) || 0)),
         long_stay_min_nights: longMin ? Math.max(2, parseInt(longMin)) : null,
@@ -82,6 +86,19 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
               onCheckedChange={(v) => setBookingType(v ? "instant" : "request")}
             />
           </div>
+
+          <div>
+            <Label htmlFor="weekend-price" className="text-sm font-medium">Weekend price / night</Label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input id="weekend-price" type="number" min={0} step="0.01" className="pl-6"
+                placeholder={`Same as weekday ($${listing?.price_per_night ?? 0})`}
+                value={weekendPrice} onChange={(e) => setWeekendPrice(e.target.value)} />
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Charged for Friday and Saturday nights. Leave empty to use your normal price.</p>
+          </div>
+
+          {listing?.id && <SeasonalRatesEditor listingId={listing.id} />}
 
           <div>
             <Label htmlFor="extra-dog" className="text-sm font-medium">Extra dog price / night</Label>
