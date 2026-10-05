@@ -546,6 +546,44 @@ export type Database = {
           },
         ]
       }
+      listing_seasonal_rates: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          listing_id: string
+          name: string
+          price_per_night: number
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          listing_id: string
+          name?: string
+          price_per_night: number
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          listing_id?: string
+          name?: string
+          price_per_night?: number
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_seasonal_rates_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           address: string | null
@@ -568,6 +606,7 @@ export type Database = {
           repeat_guest_discount_pct: number
           title: string
           updated_at: string
+          weekend_price: number | null
         }
         Insert: {
           address?: string | null
@@ -590,6 +629,7 @@ export type Database = {
           repeat_guest_discount_pct?: number
           title: string
           updated_at?: string
+          weekend_price?: number | null
         }
         Update: {
           address?: string | null
@@ -612,6 +652,7 @@ export type Database = {
           repeat_guest_discount_pct?: number
           title?: string
           updated_at?: string
+          weekend_price?: number | null
         }
         Relationships: []
       }
@@ -781,6 +822,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pup_updates: {
+        Row: {
+          author_id: string
+          booking_id: string
+          content: string
+          created_at: string
+          id: string
+          mood: string | null
+          photo_urls: Json
+        }
+        Insert: {
+          author_id: string
+          booking_id: string
+          content?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          photo_urls?: Json
+        }
+        Update: {
+          author_id?: string
+          booking_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          photo_urls?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pup_updates_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_codes: {
         Row: {
