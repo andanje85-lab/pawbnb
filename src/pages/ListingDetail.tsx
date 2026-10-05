@@ -567,6 +567,14 @@ const ListingDetail = () => {
                   <span className="font-serif text-2xl font-bold text-foreground">${listing.price}</span>
                   <span className="text-muted-foreground">/ night</span>
                 </div>
+                {(Number((listing as any).weekendPrice) > 0 || ((listing as any).seasonalRates?.length ?? 0) > 0) && (
+                  <div className="-mt-4 mb-5 text-xs text-muted-foreground space-y-0.5">
+                    {Number((listing as any).weekendPrice) > 0 && <p>Fri &amp; Sat nights: ${(listing as any).weekendPrice}</p>}
+                    {((listing as any).seasonalRates || []).map((r: any) => (
+                      <p key={r.start_date + r.name}>{r.name} ({format(new Date(r.start_date + "T00:00"), "MMM d")} – {format(new Date(r.end_date + "T00:00"), "MMM d")}): ${r.price_per_night}</p>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mb-4">
                   <Label className="text-sm font-medium mb-2 flex items-center gap-1">

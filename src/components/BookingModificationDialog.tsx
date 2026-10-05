@@ -53,6 +53,8 @@ export default function BookingModificationDialog({ booking, open, onOpenChange,
         repeat_guest_discount_pct: listing.repeat_guest_discount_pct,
         long_stay_min_nights: listing.long_stay_min_nights,
         long_stay_discount_pct: listing.long_stay_discount_pct,
+        weekend_price: listing.weekend_price,
+        seasonal_rates: listing.listing_seasonal_rates,
       }
     : null;
 
