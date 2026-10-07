@@ -14,6 +14,7 @@ import { PayoutMethods } from "@/components/PayoutMethods";
 import FavoritesList from "@/components/FavoritesList";
 import MyDogs from "@/components/MyDogs";
 import BookingDogs from "@/components/BookingDogs";
+import PupUpdates from "@/components/PupUpdates";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -495,6 +496,7 @@ const Dashboard = () => {
                                 </span>
                                 <span className="font-medium text-foreground">${booking.total_price}</span>
                               </div>
+                              {booking.status === "confirmed" && <PupUpdates bookingId={booking.id} canPost={false} />}
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {booking.status === "confirmed" && !booking.hasReview && (
                                   <Button
@@ -735,6 +737,7 @@ const Dashboard = () => {
                               <span className="font-medium text-foreground">${booking.total_price}</span>
                             </div>
                             <BookingDogs bookingId={booking.id} />
+                            {booking.status === "confirmed" && <div className="mb-3"><PupUpdates bookingId={booking.id} canPost /></div>}
                             {booking.message && (
                               <p className="text-sm text-muted-foreground italic mb-3">"{booking.message}"</p>
                             )}
