@@ -37,7 +37,7 @@ export default function PupUpdates({ bookingId, canPost }: { bookingId: string; 
     try {
       const urls: string[] = [];
       for (const f of files.slice(0, 6)) {
-        const path = `pupdates/${user.id}/${bookingId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+        const path = `${user.id}/pupdates/${bookingId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
         const { error } = await supabase.storage.from("avatars").upload(path, f);
         if (error) throw error;
         urls.push(supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl);

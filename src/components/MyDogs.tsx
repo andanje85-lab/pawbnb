@@ -142,7 +142,7 @@ const MyDogs = () => {
     if (!user) return;
     setUploading(true);
     try {
-      const path = `dogs/${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const path = `${user.id}/dogs/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
