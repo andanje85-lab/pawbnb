@@ -604,6 +604,10 @@ export type Database = {
           max_dogs: number
           price_per_night: number
           repeat_guest_discount_pct: number
+          rule_max_size: string | null
+          rule_min_age_months: number | null
+          rule_require_neutered: boolean
+          rule_require_vaccinated: boolean
           title: string
           updated_at: string
           weekend_price: number | null
@@ -627,6 +631,10 @@ export type Database = {
           max_dogs?: number
           price_per_night?: number
           repeat_guest_discount_pct?: number
+          rule_max_size?: string | null
+          rule_min_age_months?: number | null
+          rule_require_neutered?: boolean
+          rule_require_vaccinated?: boolean
           title: string
           updated_at?: string
           weekend_price?: number | null
@@ -650,6 +658,10 @@ export type Database = {
           max_dogs?: number
           price_per_night?: number
           repeat_guest_discount_pct?: number
+          rule_max_size?: string | null
+          rule_min_age_months?: number | null
+          rule_require_neutered?: boolean
+          rule_require_vaccinated?: boolean
           title?: string
           updated_at?: string
           weekend_price?: number | null
