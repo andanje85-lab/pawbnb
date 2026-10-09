@@ -20,7 +20,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
-import DogSelector from "@/components/DogSelector";
+import DogSelector, { useMyDogs } from "@/components/DogSelector";
+import { checkDog, describeRules, type DogRules } from "@/lib/dogRules";
 import { getPolicy } from "@/lib/cancellationPolicy";
 import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
 import { Zap, Handshake } from "lucide-react";
@@ -86,6 +87,7 @@ const ListingDetail = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [numDogs, setNumDogs] = useState(1);
   const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]);
+  const { data: myDogs } = useMyDogs(!!user);
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState(false);
   const [meetGreetAt, setMeetGreetAt] = useState<string>("");
@@ -198,6 +200,12 @@ const ListingDetail = () => {
         longStayDiscountPct: Number((dbListing as any).long_stay_discount_pct ?? 0),
         weekendPrice: (dbListing as any).weekend_price as number | null,
         seasonalRates: ((dbListing as any).listing_seasonal_rates || []) as any[],
+        dogRules: {
+          maxSize: (dbListing as any).rule_max_size ?? null,
+          requireNeutered: !!(dbListing as any).rule_require_neutered,
+          requireVaccinated: !!(dbListing as any).rule_require_vaccinated,
+          minAgeMonths: (dbListing as any).rule_min_age_months ?? null,
+        } as DogRules,
         isDb: true,
       };
     }
@@ -269,6 +277,11 @@ const ListingDetail = () => {
     );
   }
 
+  const dogRules: DogRules | undefined = (listing as any)?.dogRules;
+  const ruleIssues = dogRules
+    ? (myDogs || []).filter((d) => selectedDogIds.includes(d.id)).flatMap((d) => checkDog(d, dogRules))
+    : [];
+
   const handleBook = async () => {
     if (!user) {
       toast.error("Please sign in to book a stay");
@@ -280,6 +293,10 @@ const ListingDetail = () => {
     }
     if (!listing.isDb) {
       toast.info("This is a demo listing. Create a real listing to enable bookings!");
+      return;
+    }
+    if (ruleIssues.length > 0) {
+      toast.error(ruleIssues[0]);
       return;
     }
     setBooking(true);
@@ -647,7 +664,13 @@ const ListingDetail = () => {
                     onSelectedIdsChange={setSelectedDogIds}
                     maxDogs={listing.maxDogs}
                     isDbListing={!!(listing as any).isDb}
+                    rules={dogRules}
                   />
+                  {dogRules && describeRules(dogRules).length > 0 && (
+                    <div className="mt-2 text-[11px] text-muted-foreground">
+                      <span className="font-medium text-foreground">House rules:</span> {describeRules(dogRules).join(" · ")}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -724,7 +747,7 @@ const ListingDetail = () => {
                   className="w-full"
                   size="lg"
                   onClick={handleBook}
-                  disabled={booking || nights === 0}
+                  disabled={booking || nights === 0 || ruleIssues.length > 0}
                 >
                   {!user
                     ? "Sign in to book"

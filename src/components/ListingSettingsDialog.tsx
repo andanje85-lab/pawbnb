@@ -26,6 +26,10 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
   const [longMin, setLongMin] = useState<string>("");
   const [longPct, setLongPct] = useState<string>("0");
   const [weekendPrice, setWeekendPrice] = useState<string>("");
+  const [ruleMaxSize, setRuleMaxSize] = useState<string>("any");
+  const [ruleNeutered, setRuleNeutered] = useState(false);
+  const [ruleVaccinated, setRuleVaccinated] = useState(false);
+  const [ruleMinAge, setRuleMinAge] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +40,10 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
       setLongMin(listing.long_stay_min_nights ? String(listing.long_stay_min_nights) : "");
       setLongPct(String(listing.long_stay_discount_pct ?? 0));
       setWeekendPrice(listing.weekend_price ? String(listing.weekend_price) : "");
+      setRuleMaxSize(listing.rule_max_size || "any");
+      setRuleNeutered(!!listing.rule_require_neutered);
+      setRuleVaccinated(!!listing.rule_require_vaccinated);
+      setRuleMinAge(listing.rule_min_age_months ? String(listing.rule_min_age_months) : "");
     }
   }, [open, listing]);
 
@@ -49,6 +57,10 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
         repeat_guest_discount_pct: Math.min(100, Math.max(0, parseInt(repeatPct) || 0)),
         long_stay_min_nights: longMin ? Math.max(2, parseInt(longMin)) : null,
         long_stay_discount_pct: Math.min(100, Math.max(0, parseInt(longPct) || 0)),
+        rule_max_size: ruleMaxSize === "any" ? null : ruleMaxSize,
+        rule_require_neutered: ruleNeutered,
+        rule_require_vaccinated: ruleVaccinated,
+        rule_min_age_months: parseInt(ruleMinAge) > 0 ? parseInt(ruleMinAge) : null,
       };
       const { error } = await (supabase as any).from("listings").update(patch).eq("id", listing.id);
       if (error) throw error;
@@ -96,6 +108,35 @@ export default function ListingSettingsDialog({ listing, open, onOpenChange }: P
                 value={weekendPrice} onChange={(e) => setWeekendPrice(e.target.value)} />
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">Charged for Friday and Saturday nights. Leave empty to use your normal price.</p>
+          </div>
+
+          <div className="p-3 rounded-lg border border-border space-y-3">
+            <div>
+              <Label className="font-medium">House rules for dogs</Label>
+              <p className="text-xs text-muted-foreground mt-1">Guests are warned before booking if their dog doesn't fit.</p>
+            </div>
+            <div>
+              <Label htmlFor="rule-size" className="text-sm">Largest dog size</Label>
+              <select id="rule-size" value={ruleMaxSize} onChange={(e) => setRuleMaxSize(e.target.value)}
+                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <option value="any">Any size</option>
+                <option value="small">Small only</option>
+                <option value="medium">Up to medium</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="rule-neutered" className="text-sm">Must be spayed / neutered</Label>
+              <Switch id="rule-neutered" checked={ruleNeutered} onCheckedChange={setRuleNeutered} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="rule-vax" className="text-sm">Vaccines must be up to date</Label>
+              <Switch id="rule-vax" checked={ruleVaccinated} onCheckedChange={setRuleVaccinated} />
+            </div>
+            <div>
+              <Label htmlFor="rule-age" className="text-sm">Minimum age (months)</Label>
+              <Input id="rule-age" type="number" min={0} className="mt-1" placeholder="No minimum"
+                value={ruleMinAge} onChange={(e) => setRuleMinAge(e.target.value)} />
+            </div>
           </div>
 
           {listing?.id && <SeasonalRatesEditor listingId={listing.id} />}
