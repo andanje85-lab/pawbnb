@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Users, Plus } from "lucide-react";
 import { DogAvatar } from "@/components/MyDogs";
+import { checkDog, type DogRules } from "@/lib/dogRules";
 
 export type DogProfile = {
   id: string;
@@ -13,6 +14,9 @@ export type DogProfile = {
   breed: string | null;
   size: string | null;
   photo_url: string | null;
+  spayed_neutered: boolean | null;
+  vaccination_status: string | null;
+  date_of_birth: string | null;
 };
 
 export const useMyDogs = (enabled: boolean) =>
@@ -21,7 +25,7 @@ export const useMyDogs = (enabled: boolean) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("dogs")
-        .select("id, name, breed, size, photo_url")
+        .select("id, name, breed, size, photo_url, spayed_neutered, vaccination_status, date_of_birth")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data || []) as DogProfile[];
@@ -41,6 +45,7 @@ const DogSelector = ({
   onSelectedIdsChange,
   maxDogs,
   isDbListing,
+  rules,
 }: {
   numDogs: number;
   onNumDogsChange: (n: number) => void;
@@ -48,6 +53,7 @@ const DogSelector = ({
   onSelectedIdsChange: (ids: string[]) => void;
   maxDogs: number;
   isDbListing: boolean;
+  rules?: DogRules;
 }) => {
   const { user } = useAuth();
   const { data: dogs } = useMyDogs(!!user && isDbListing);
@@ -99,9 +105,10 @@ const DogSelector = ({
       <div className="space-y-2">
         {dogs!.map((dog) => {
           const selected = selectedIds.includes(dog.id);
+          const issues = rules ? checkDog(dog, rules) : [];
           return (
+            <div key={dog.id}>
             <button
-              key={dog.id}
               type="button"
               onClick={() => toggle(dog.id)}
               className={`w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-colors ${
@@ -123,6 +130,12 @@ const DogSelector = ({
                 {selected ? "✓" : ""}
               </div>
             </button>
+            {issues.length > 0 && (
+              <ul className="mt-1 ml-1 text-[11px] text-destructive space-y-0.5">
+                {issues.map((i) => <li key={i}>⚠ {i}</li>)}
+              </ul>
+            )}
+            </div>
           );
         })}
       </div>
