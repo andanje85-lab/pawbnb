@@ -318,11 +318,11 @@ const Index = () => {
                 onValueChange={(v) => v && setViewMode(v as ViewMode)}
                 className="rounded-xl border border-border bg-card p-0.5"
               >
-                <ToggleGroupItem value="list" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                <ToggleGroupItem value="list" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground">
                   <LayoutGrid className="w-4 h-4" />
                   <span className="text-xs">List</span>
                 </ToggleGroupItem>
-                <ToggleGroupItem value="map" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary">
+                <ToggleGroupItem value="map" className="rounded-lg gap-1.5 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground">
                   <MapIcon className="w-4 h-4" />
                   <span className="text-xs">Map</span>
                 </ToggleGroupItem>
