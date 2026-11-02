@@ -15,6 +15,7 @@ import FavoritesList from "@/components/FavoritesList";
 import MyDogs from "@/components/MyDogs";
 import BookingDogs from "@/components/BookingDogs";
 import PupUpdates from "@/components/PupUpdates";
+import MeetGreets from "@/components/MeetGreets";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -414,6 +415,7 @@ const Dashboard = () => {
                 <TabsTrigger value="bookings" className="shrink-0">My Bookings</TabsTrigger>
                 <TabsTrigger value="favorites" className="shrink-0">Favorites</TabsTrigger>
                 <TabsTrigger value="dogs" className="shrink-0">My Dogs</TabsTrigger>
+                <TabsTrigger value="meetgreets" className="shrink-0">Meet &amp; Greets</TabsTrigger>
                 {isHost && <TabsTrigger value="listings" className="shrink-0">My Listings</TabsTrigger>}
                 {isHost && <TabsTrigger value="requests" className="shrink-0">Booking Requests</TabsTrigger>}
                 {isHost && <TabsTrigger value="availability" className="shrink-0">Availability</TabsTrigger>}
@@ -427,6 +429,10 @@ const Dashboard = () => {
 
               <TabsContent value="dogs">
                 <MyDogs />
+              </TabsContent>
+
+              <TabsContent value="meetgreets">
+                <MeetGreets />
               </TabsContent>
 
               {isHost && (

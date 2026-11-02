@@ -21,6 +21,7 @@ import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
 import DogSelector, { useMyDogs } from "@/components/DogSelector";
+import MeetGreetDialog from "@/components/MeetGreetDialog";
 import { checkDog, describeRules, type DogRules } from "@/lib/dogRules";
 import { getPolicy } from "@/lib/cancellationPolicy";
 import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
