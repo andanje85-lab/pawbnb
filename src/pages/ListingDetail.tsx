@@ -21,6 +21,7 @@ import Footer from "@/components/Footer";
 import LocationMap from "@/components/LocationMap";
 import ReportDialog from "@/components/ReportDialog";
 import DogSelector, { useMyDogs } from "@/components/DogSelector";
+import MeetGreetDialog from "@/components/MeetGreetDialog";
 import { checkDog, describeRules, type DogRules } from "@/lib/dogRules";
 import { getPolicy } from "@/lib/cancellationPolicy";
 import { computePricing, isRepeatGuestFor } from "@/lib/pricing";
@@ -758,6 +759,14 @@ const ListingDetail = () => {
                     : `Request to Book · $${totalPrice.toFixed(2)}`}
                 </Button>
 
+                {(listing as any).isDb && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Not ready to book? Meet the host first.
+                    </p>
+                    <MeetGreetDialog listingId={(listing as any).id} />
+                  </div>
+                )}
 
                 {(() => {
                   const policy = getPolicy(listing.cancellationPolicy);
