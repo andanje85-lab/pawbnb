@@ -759,6 +759,14 @@ const ListingDetail = () => {
                     : `Request to Book · $${totalPrice.toFixed(2)}`}
                 </Button>
 
+                {(listing as any).isDb && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Not ready to book? Meet the host first.
+                    </p>
+                    <MeetGreetDialog listingId={(listing as any).id} />
+                  </div>
+                )}
 
                 {(() => {
                   const policy = getPolicy(listing.cancellationPolicy);
