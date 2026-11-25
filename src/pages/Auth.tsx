@@ -9,19 +9,36 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset">(() =>
+    new URLSearchParams(window.location.search).get("mode") === "reset" ? "reset" : "login",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const isLogin = mode === "login";
+  const isSignup = mode === "signup";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth?mode=reset`,
+        });
+        if (error) throw error;
+        toast.success("If an account exists for that email, a password reset link is on its way.");
+        setMode("login");
+      } else if (mode === "reset") {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Password updated. Your account access is unchanged.");
+        navigate("/admin");
+      } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
@@ -85,14 +102,20 @@ const Auth = () => {
           </div>
 
           <h1 className="font-serif text-2xl font-bold text-foreground mb-1">
-            {isLogin ? "Welcome back" : "Create your account"}
+          {mode === "forgot" ? "Reset your password" : mode === "reset" ? "Choose a new password" : isLogin ? "Welcome back" : "Create your account"}
           </h1>
           <p className="text-muted-foreground text-sm mb-8">
-            {isLogin ? "Sign in to manage your bookings" : "Join PawBnB as a dog owner or host"}
+            {mode === "forgot"
+              ? "Enter the email address on your account."
+              : mode === "reset"
+                ? "Choose a new password for your account."
+                : isLogin
+                  ? "Sign in to manage your bookings"
+                  : "Join PawBnB as a dog owner or host"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {isSignup && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <div className="relative">
@@ -110,54 +133,86 @@ const Auth = () => {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
+            {mode !== "reset" && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                />
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">{mode === "reset" ? "New password" : "Password"}</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                    minLength={6}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="text-sm text-primary font-medium hover:underline"
+              >
+                Forgot password?
+              </button>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+              {loading
+                ? "Please wait..."
+                : mode === "forgot"
+                  ? "Send reset link"
+                  : mode === "reset"
+                    ? "Update password"
+                    : isLogin
+                      ? "Sign In"
+                      : "Create Account"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {mode === "login" || mode === "signup" ? (
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setMode(isLogin ? "signup" : "login")}
+                className="text-primary font-medium hover:underline"
+              >
+                {isLogin ? "Sign up" : "Sign in"}
+              </button>
+            </p>
+          ) : (
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary font-medium hover:underline"
+              onClick={() => setMode("login")}
+              className="mt-6 w-full text-center text-sm text-primary font-medium hover:underline"
             >
-              {isLogin ? "Sign up" : "Sign in"}
+              Back to sign in
             </button>
-          </p>
+          )}
         </motion.div>
       </div>
     </div>
