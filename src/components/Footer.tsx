@@ -53,7 +53,7 @@ const Footer = () => {
                 to={`/dog-boarding/${c.slug}`}
                 className="hover:text-background transition-colors"
               >
-                Dog boarding in {c.name}, {c.state}
+                Dog boarding in {c.name}, {c.country}
               </Link>
             ))}
           </div>

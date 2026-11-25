@@ -72,7 +72,7 @@ const CityLanding = () => {
 
   if (!city) return <Navigate to="/" replace />;
 
-  const label = `${city.name}, ${city.state}`;
+  const label = `${city.name}, ${city.country}`;
   const url = `${SITE_URL}/dog-boarding/${city.slug}`;
   const title = `Dog Boarding & Sitters in ${label} | PawBnB`;
   const description = `Find trusted dog boarding and daycare in ${label}. Compare verified local hosts, nightly rates and real reviews, then book your dog's stay on PawBnB.`;
@@ -260,7 +260,7 @@ const CityLanding = () => {
                   to={`/dog-boarding/${c.slug}`}
                   className="text-sm px-4 py-2 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
                 >
-                  {c.name}, {c.state}
+                  {c.name}, {c.country}
                 </Link>
               ))}
             </div>

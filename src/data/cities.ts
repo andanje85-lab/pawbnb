@@ -1,86 +1,205 @@
 export interface City {
   slug: string;
   name: string;
-  state: string;
+  country: string;
   intro: string;
   neighborhoods: string[];
   faq: { q: string; a: string }[];
 }
 
+type CityDetails = Omit<City, "faq">;
+
+const createCity = (city: CityDetails): City => ({
+  ...city,
+  faq: [
+    {
+      q: `How do I choose a dog boarding host in ${city.name}?`,
+      a: "Compare host profiles, verified reviews, availability, and the care details that matter to your dog. You can message a host or arrange a meet & greet before confirming a stay.",
+    },
+    {
+      q: `Can I find dog boarding near me in ${city.name}?`,
+      a: "Browse local host listings and check each host's location, services, and calendar. Availability depends on the dates and care needs you select.",
+    },
+  ],
+});
+
 export const CITIES: City[] = [
-  {
+  createCity({
     slug: "portland-or",
     name: "Portland",
-    state: "OR",
-    intro:
-      "Portland dogs are spoiled for choice — fenced backyards in Sellwood, riverside walks along the Willamette, and off-leash romps at Mt. Tabor. Our local hosts know the trails, the rainy-day routines, and the nearest emergency vet.",
+    country: "United States",
+    intro: "Find dog boarding with local hosts across Portland, from leafy residential streets to walkable inner-city neighborhoods. Compare care routines, home details, and availability for your dog's stay.",
     neighborhoods: ["Sellwood-Moreland", "Alberta Arts", "Hawthorne", "St. Johns"],
-    faq: [
-      { q: "How much does dog boarding cost in Portland?", a: "Most Portland hosts charge between $35 and $60 per night, with lower rates for stays longer than a week and discounts for repeat guests." },
-      { q: "Do hosts walk dogs in the rain?", a: "Yes — Portland hosts are used to wet weather. Listings note towel-down routines, covered yards, and indoor play space." },
-    ],
-  },
-  {
+  }),
+  createCity({
     slug: "austin-tx",
     name: "Austin",
-    state: "TX",
-    intro:
-      "From patio brunches to Barton Creek swims, Austin is built for dogs. Hosts here offer shaded yards, early-morning walks that beat the Texas heat, and plenty of air-conditioned nap space.",
+    country: "United States",
+    intro: "Explore dog boarding in Austin with hosts who can share their home setup, daily routines, and outdoor space. Choose a stay that suits your dog's temperament and schedule.",
     neighborhoods: ["East Austin", "South Congress", "Zilker", "Mueller"],
-    faq: [
-      { q: "How do hosts handle Austin summer heat?", a: "Listings describe cooling setups — indoor A/C, shaded yards, splash pools, and walks scheduled for early morning and evening." },
-      { q: "Can I book same-day dog boarding in Austin?", a: "Instant Book listings confirm immediately, so same-day stays are often possible when the calendar is open." },
-    ],
-  },
-  {
+  }),
+  createCity({
     slug: "denver-co",
     name: "Denver",
-    state: "CO",
-    intro:
-      "Denver hosts are outdoors people, and their dog guests benefit. Expect long walks in Wash Park, altitude-aware exercise, and hosts who know which trails are dog-friendly year-round.",
+    country: "United States",
+    intro: "Discover dog boarding options in Denver and compare local hosts by the care, home environment, and dates they offer. Message a host to talk through your dog's routine before booking.",
     neighborhoods: ["Wash Park", "Highlands", "RiNo", "Cherry Creek"],
-    faq: [
-      { q: "Are Denver hosts comfortable with big dogs?", a: "Many are — filter by number of dogs and check each listing's size notes and yard details before booking." },
-      { q: "What about winter stays?", a: "Hosts list indoor play areas and paw-care routines for snow and de-icer, so cold-weather stays stay comfortable." },
-    ],
-  },
-  {
+  }),
+  createCity({
     slug: "asheville-nc",
     name: "Asheville",
-    state: "NC",
-    intro:
-      "Mountain air, big yards, and a town that genuinely loves dogs. Asheville hosts often have acreage, making it a favourite for multi-dog households and high-energy breeds.",
+    country: "United States",
+    intro: "Find a comfortable dog boarding stay in Asheville with local hosts. Review each home, ask about exercise and daily care, and choose a host whose routine fits your dog.",
     neighborhoods: ["West Asheville", "North Asheville", "Montford", "Biltmore Village"],
-    faq: [
-      { q: "Can I board more than one dog in Asheville?", a: "Yes — several Asheville listings accept three or more dogs, with per-dog pricing shown clearly at checkout." },
-      { q: "Do hosts take dogs on hikes?", a: "Many do. Listings mention hiking, and you can message a host before booking to confirm activity levels." },
-    ],
-  },
-  {
+  }),
+  createCity({
     slug: "scottsdale-az",
     name: "Scottsdale",
-    state: "AZ",
-    intro:
-      "Scottsdale stays lean upscale: pools, misters, and shaded travertine patios. Hosts here plan around desert heat and know which local vets handle cactus and snake encounters.",
+    country: "United States",
+    intro: "Browse dog boarding hosts in Scottsdale and compare their home environments, services, and availability. Share your dog's needs with a host before arranging a stay.",
     neighborhoods: ["Old Town", "McCormick Ranch", "North Scottsdale", "Arcadia"],
-    faq: [
-      { q: "Are pool stays safe for dogs?", a: "Hosts with pools describe supervision rules and fencing on their listing, and you can ask about swim experience before booking." },
-      { q: "What's the typical nightly rate?", a: "Scottsdale rates run higher than the national average, commonly $55 to $85 per night depending on amenities." },
-    ],
-  },
-  {
+  }),
+  createCity({
     slug: "malibu-ca",
     name: "Malibu",
-    state: "CA",
-    intro:
-      "Beach access is the headline in Malibu. Hosts along the coast build stays around morning sand walks, rinse-off routines, and calm evenings with ocean air.",
+    country: "United States",
+    intro: "Explore dog boarding in Malibu with hosts who can describe their home, daily routine, and the care they provide. Check the details and connect before choosing a stay.",
     neighborhoods: ["Point Dume", "Zuma", "Malibu Colony", "Trancas"],
-    faq: [
-      { q: "Do Malibu hosts take dogs to the beach?", a: "Beach-access listings say so directly. Confirm leash rules and swim comfort with your host in the app before you book." },
-      { q: "Is Malibu good for anxious dogs?", a: "Quiet coastal homes with low foot traffic suit nervous dogs well — look for listings that mention one-dog-at-a-time hosting." },
-    ],
-  },
+  }),
+  createCity({
+    slug: "nairobi",
+    name: "Nairobi",
+    country: "Kenya",
+    intro: "Find dog boarding in Nairobi with local hosts across the city. Compare home settings and daily care in areas such as Karen, Westlands, and Kilimani, then message a host about your dog's needs.",
+    neighborhoods: ["Karen", "Westlands", "Kilimani", "Lavington"],
+  }),
+  createCity({
+    slug: "mombasa",
+    name: "Mombasa",
+    country: "Kenya",
+    intro: "Browse dog boarding stays in Mombasa and connect with local hosts about your dog's routine, comfort, and care. Explore options around Nyali, Bamburi, and other neighborhoods.",
+    neighborhoods: ["Nyali", "Bamburi", "Shanzu", "Mtwapa"],
+  }),
+  createCity({
+    slug: "accra",
+    name: "Accra",
+    country: "Ghana",
+    intro: "Explore dog boarding in Accra with hosts who can share details about their homes and the care they provide. Compare options across the city and discuss your dog's routine before booking.",
+    neighborhoods: ["East Legon", "Osu", "Cantonments", "Labone"],
+  }),
+  createCity({
+    slug: "cape-town",
+    name: "Cape Town",
+    country: "South Africa",
+    intro: "Discover dog boarding in Cape Town with local hosts in neighborhoods from Sea Point to Constantia. Review each stay and ask about the daily routine that will keep your dog settled.",
+    neighborhoods: ["Sea Point", "Gardens", "Claremont", "Constantia"],
+  }),
+  createCity({
+    slug: "johannesburg",
+    name: "Johannesburg",
+    country: "South Africa",
+    intro: "Find dog boarding in Johannesburg and compare local hosts by their home, services, and availability. Talk through your dog's care needs before selecting a stay.",
+    neighborhoods: ["Rosebank", "Melville", "Parkhurst", "Sandton"],
+  }),
+  createCity({
+    slug: "london",
+    name: "London",
+    country: "United Kingdom",
+    intro: "Browse dog boarding in London with hosts across the city. Compare home environments, daily routines, and availability, then connect with a host about what helps your dog feel at home.",
+    neighborhoods: ["Hackney", "Richmond", "Camden", "Greenwich"],
+  }),
+  createCity({
+    slug: "manchester",
+    name: "Manchester",
+    country: "United Kingdom",
+    intro: "Explore Manchester dog boarding with local hosts who can explain their home setup and care routine. Find a stay that fits your dog's needs and your travel dates.",
+    neighborhoods: ["Didsbury", "Chorlton", "Ancoats", "Sale"],
+  }),
+  createCity({
+    slug: "paris",
+    name: "Paris",
+    country: "France",
+    intro: "Find dog boarding in Paris by browsing local hosts and the care they offer. Review each profile, check availability, and discuss your dog's routine before arranging a stay.",
+    neighborhoods: ["Le Marais", "Montmartre", "Batignolles", "Bastille"],
+  }),
+  createCity({
+    slug: "berlin",
+    name: "Berlin",
+    country: "Germany",
+    intro: "Discover dog boarding in Berlin with hosts across the city. Compare the details of each home and get in touch to make sure the care is right for your dog.",
+    neighborhoods: ["Kreuzberg", "Prenzlauer Berg", "Neukölln", "Charlottenburg"],
+  }),
+  createCity({
+    slug: "toronto",
+    name: "Toronto",
+    country: "Canada",
+    intro: "Browse dog boarding in Toronto and compare local hosts by home setting, services, and availability. Message a host to share your dog's care notes before booking.",
+    neighborhoods: ["The Annex", "Leslieville", "High Park", "North York"],
+  }),
+  createCity({
+    slug: "vancouver",
+    name: "Vancouver",
+    country: "Canada",
+    intro: "Find dog boarding in Vancouver with local hosts throughout the city. Review their home and care details, then discuss your dog's needs and schedule directly.",
+    neighborhoods: ["Kitsilano", "Mount Pleasant", "Commercial Drive", "West End"],
+  }),
+  createCity({
+    slug: "sao-paulo",
+    name: "São Paulo",
+    country: "Brazil",
+    intro: "Explore dog boarding in São Paulo with hosts who can share their home's setup and daily routine. Compare local options and discuss the right fit for your dog.",
+    neighborhoods: ["Pinheiros", "Vila Madalena", "Moema", "Jardins"],
+  }),
+  createCity({
+    slug: "mexico-city",
+    name: "Mexico City",
+    country: "Mexico",
+    intro: "Browse dog boarding in Mexico City and connect with local hosts about your dog's routine, care, and stay dates. Compare profiles to find a welcoming fit.",
+    neighborhoods: ["Roma Norte", "Condesa", "Polanco", "Coyoacán"],
+  }),
+  createCity({
+    slug: "dubai",
+    name: "Dubai",
+    country: "United Arab Emirates",
+    intro: "Find dog boarding in Dubai with hosts who can explain their home environment and care routine. Check each listing's services and availability, then message about your dog's needs.",
+    neighborhoods: ["Jumeirah", "Dubai Marina", "Al Barsha", "Downtown Dubai"],
+  }),
+  createCity({
+    slug: "singapore",
+    name: "Singapore",
+    country: "Singapore",
+    intro: "Explore dog boarding in Singapore with local hosts across the island. Compare home details and daily care, and talk with a host about your dog's routine before booking.",
+    neighborhoods: ["Tiong Bahru", "Holland Village", "Katong", "Bukit Timah"],
+  }),
+  createCity({
+    slug: "tokyo",
+    name: "Tokyo",
+    country: "Japan",
+    intro: "Browse dog boarding in Tokyo and find local hosts whose home and care routine suit your dog. Review the listing details and connect before choosing a stay.",
+    neighborhoods: ["Shibuya", "Setagaya", "Meguro", "Nakameguro"],
+  }),
+  createCity({
+    slug: "sydney",
+    name: "Sydney",
+    country: "Australia",
+    intro: "Find dog boarding in Sydney with local hosts across the city. Compare their home environments, care routines, and availability, then discuss your dog's needs before booking.",
+    neighborhoods: ["Newtown", "Surry Hills", "Bondi", "Parramatta"],
+  }),
+  createCity({
+    slug: "melbourne",
+    name: "Melbourne",
+    country: "Australia",
+    intro: "Explore dog boarding in Melbourne and compare local hosts by the care and home setting they offer. Check dates and message a host about your dog's routine.",
+    neighborhoods: ["Fitzroy", "Carlton", "Brunswick", "South Yarra"],
+  }),
+  createCity({
+    slug: "auckland",
+    name: "Auckland",
+    country: "New Zealand",
+    intro: "Browse dog boarding in Auckland with hosts around the city. Review each listing's home and services, and connect with a host to find a comfortable match for your dog.",
+    neighborhoods: ["Ponsonby", "Mount Eden", "Grey Lynn", "Devonport"],
+  }),
 ];
 
 export const getCityBySlug = (slug?: string) =>
-  CITIES.find((c) => c.slug === slug?.toLowerCase());
+  CITIES.find((city) => city.slug === slug?.toLowerCase());
